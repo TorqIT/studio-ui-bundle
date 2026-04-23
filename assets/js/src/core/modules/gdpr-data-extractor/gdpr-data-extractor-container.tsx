@@ -27,9 +27,9 @@ import { useLazyGdprSearchDataQuery } from './gdpr-data-extractor-slice-enhanced
 import { ApiError, trackError } from '@sdk/modules/app'
 
 export interface SearchOverrides {
+  sortFilter?: SortFilter
   provider?: string
   columnFilters?: ColumnFilter[]
-  sortFilter?: SortFilter
   page?: number
   pageSize?: number
 }
@@ -39,7 +39,7 @@ export const GDPRDataExtractorContainer = (): React.JSX.Element => {
   const [page, setPage] = useState<number>(1)
   const [pageSize, setPageSize] = useState<number>(20)
   const [columnFilters, setColumnFilters] = useState<ColumnFilter[]>([])
-  const [sortFilter, setSortFilter] = useState<SortFilter>({ key: 'id', direction: 'ASC' })
+  const [sortFilter, setSortFilter] = useState<SortFilter | undefined>(undefined)
   const [provider, setProvider] = useState<string>('data_objects')
 
   const [trigger, { data, isLoading, isFetching, error }] = useLazyGdprSearchDataQuery()
@@ -60,9 +60,18 @@ export const GDPRDataExtractorContainer = (): React.JSX.Element => {
   const executeSearch = (overrides?: SearchOverrides): void => {
     const currentProvider = overrides?.provider ?? provider
     const currentColumnFilters = overrides?.columnFilters ?? columnFilters
-    const currentSortFilter = overrides?.sortFilter ?? sortFilter
-    const currentPage = overrides?.page ?? page
     const currentPageSize = overrides?.pageSize ?? pageSize
+
+    if (overrides?.sortFilter !== undefined) {
+      setSortFilter(overrides.sortFilter)
+    }
+    const currentSortFilter = overrides?.sortFilter ?? sortFilter
+
+    const isSortChange = overrides?.sortFilter !== undefined && overrides?.page === undefined
+    const currentPage = isSortChange ? 1 : (overrides?.page ?? page)
+    if (isSortChange) {
+      setPage(1)
+    }
 
     if (currentProvider === '' || isEmpty(currentColumnFilters)) return
 
@@ -131,6 +140,7 @@ export const GDPRDataExtractorContainer = (): React.JSX.Element => {
       }
     >
       <Content
+        data-testid="gdpr-data-extractor-content"
         gap={ 'extra-small' }
         padded
         padding={ {
@@ -150,18 +160,15 @@ export const GDPRDataExtractorContainer = (): React.JSX.Element => {
         />
         <Tabpanel
           data={ data?.items ?? [] }
+          executeSearch={ executeSearch }
           isLoading={ isLoading || isFetching }
           onProviderChange={ (providerKey) => {
             setProvider(providerKey)
-            executeSearch({ provider: providerKey })
-          } }
-          onSortingChange={ (sortFilter) => {
-            setSortFilter(sortFilter!)
-            executeSearch({ sortFilter: sortFilter! })
+            setPage(1)
+            executeSearch({ provider: providerKey, page: 1 })
           } }
           providerKey={ provider }
           refresh={ executeSearch }
-          sortFilter={ sortFilter }
         />
       </Content>
     </ContentLayout>

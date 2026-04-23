@@ -19,6 +19,7 @@ import { type IFormatPathItem, useFormatPath } from '@Pimcore/modules/data-objec
 import { useDataObject } from '@Pimcore/modules/data-object/hooks/use-data-object'
 import { isValidPathFormatterConfig } from '../utils/path-formatter'
 import { flattenValues } from '@Pimcore/components/many-to-many-relation/utils/helpers'
+import { mapToLegacyElementType } from '@Pimcore/modules/element/utils/element-type'
 
 export interface ManyToManyRelationValueItem {
   id: number
@@ -120,11 +121,11 @@ export const useValue = (
     return value?.some(item => item.id === id && item.type === type) ?? false
   }
 
-  function mapNewValues (value: ManyToManyRelationValue, data: { items: Array<{ objectReference: string, formatedPath: string }> }): DisplayManyToManyRelationValue {
+  function mapNewValues (value: ManyToManyRelationValue, data: { items: Array<{ objectReference: string | number, formatedPath: string | number }> }): DisplayManyToManyRelationValue {
     return value.map((item): DisplayManyToManyRelationValueItem => ({
       ...item,
       originalPath: item.fullPath,
-      fullPath: data.items.find(i => i.objectReference === `${item.type}_${item.id}`)?.formatedPath ?? item.fullPath
+      fullPath: String(data.items.find(i => String(i.objectReference) === `${item.type}_${item.id}`)?.formatedPath ?? item.fullPath)
     }))
   }
 
@@ -163,16 +164,16 @@ export const useValue = (
 
   function applyFormattingWithLoadingState (
     items: ManyToManyRelationValue,
-    cachedData?: { items: Array<{ objectReference: string, formatedPath: string }> }
+    cachedData?: { items: Array<{ objectReference: string | number, formatedPath: string | number }> }
   ): DisplayManyToManyRelationValue {
     return items.map((item): DisplayManyToManyRelationValueItem => {
       const objectReference = `${item.type}_${item.id}`
-      const cachedItem = cachedData?.items.find(cached => cached.objectReference === objectReference)
+      const cachedItem = cachedData?.items.find(cached => String(cached.objectReference) === objectReference)
 
       return {
         ...item,
         originalPath: item.fullPath,
-        fullPath: cachedItem?.formatedPath ?? item.fullPath,
+        fullPath: String(cachedItem?.formatedPath ?? item.fullPath),
         loading: isNil(cachedItem)
       }
     })
@@ -226,7 +227,7 @@ export const useValue = (
     if (info.type === 'data-object') {
       newValue = {
         id: info.data.id,
-        type: 'object',
+        type: mapToLegacyElementType(info.type),
         subtype: info.data.className ?? info.data.type,
         isPublished: info.data.published,
         fullPath: info.data.fullPath

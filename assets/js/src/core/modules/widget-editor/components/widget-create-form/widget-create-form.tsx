@@ -8,9 +8,9 @@
  *  @license    Pimcore Open Core License (POCL)
  */
 
-import { Form } from '@Pimcore/components/form/form'
+import { Form, type formInstanceType } from '@Pimcore/components/form/form'
 import { Input } from '@sdk/components'
-import { type FormInstance, type InputRef } from 'antd'
+import { type InputRef } from 'antd'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { WidgetTypeSelect } from '../widget-type-select/widget-type-select'
@@ -21,16 +21,17 @@ export interface WidgetForm {
 }
 
 interface CreateWidgetFormProps {
-  form: FormInstance<WidgetForm>
+  form: formInstanceType<WidgetForm>
   inputRef?: React.RefObject<InputRef>
   initialValues?: Partial<WidgetForm>
+  onPressEnter?: () => void
 }
 
 enum WidgetTypes {
   ElementTree = 'element_tree'
 }
 
-export const CreateWidgetForm = ({ form, initialValues, inputRef }: CreateWidgetFormProps): React.JSX.Element => {
+export const CreateWidgetForm = ({ form, initialValues, inputRef, onPressEnter }: CreateWidgetFormProps): React.JSX.Element => {
   const { t } = useTranslation()
 
   return (
@@ -49,7 +50,10 @@ export const CreateWidgetForm = ({ form, initialValues, inputRef }: CreateWidget
           { required: true, message: t('widget-editor.create-form.name.required') }
         ] }
       >
-        <Input ref={ inputRef } />
+        <Input
+          onPressEnter={ onPressEnter }
+          ref={ inputRef }
+        />
       </Form.Item>
 
       <Form.Item

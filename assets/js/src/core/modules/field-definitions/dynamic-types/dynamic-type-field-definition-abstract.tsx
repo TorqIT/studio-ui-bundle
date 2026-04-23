@@ -23,6 +23,12 @@ export interface FieldDefinitionContext extends Record<string, any> {
   area: string[]
   path: string[]
   fieldDefinitions: ILayoutContext['fieldDefinitions']
+  disableName?: boolean
+  isEncryptedField?: boolean
+}
+
+export interface FieldDefinitionConvertibleContext extends FieldDefinitionContext {
+  newTypeId: string
 }
 
 export interface FieldDefinitionAbstractFormFieldsProps {
@@ -42,11 +48,11 @@ export abstract class DynamicTypeFieldDefinitionAbstract extends DynamicTypeAbst
     return [this.id]
   }
 
-  protected getAllowedChildTags (props: FieldDefinitionContext): string[] {
+  getAllowedChildTags (props: FieldDefinitionContext): string[] {
     return []
   }
 
-  protected getDisallowedRecursiveChildTags (props: FieldDefinitionContext): string[] {
+  getDisallowedRecursiveChildTags (props: FieldDefinitionContext): string[] {
     return []
   }
 
@@ -86,12 +92,26 @@ export abstract class DynamicTypeFieldDefinitionAbstract extends DynamicTypeAbst
     return true
   }
 
+  opensNamespace (): boolean {
+    return false
+  }
+
   abstract getDefaultData (context: FieldDefinitionContext): FieldDefinitionDataAbstract
+
+  getConvertibleData (context: FieldDefinitionConvertibleContext): Partial<FieldDefinitionDataAbstract> {
+    return {}
+  }
 
   abstract getFormFields (context: FieldDefinitionContext): React.JSX.Element
 
+  abstract getSpecificFormFields (context: FieldDefinitionContext): React.JSX.Element
+
   getAdditionalFormFields (context: FieldDefinitionContext): React.JSX.Element | null {
     return null
+  }
+
+  normalizeFieldDefinition (fieldDef: Record<string, unknown>): Record<string, unknown> {
+    return fieldDef
   }
 
   protected computeValidTags (tags: string[], context: FieldDefinitionContext): string[] {

@@ -11,10 +11,14 @@
 import { createStyles } from 'antd-style'
 import { isEmptyValue } from '@Pimcore/utils/type-utils'
 import { type SelectTheme } from './select'
+import { toCssDimension } from '@sdk/utils'
 
 interface StylesProps {
   width?: number
   theme?: SelectTheme
+  skeletonWidth?: number | string
+  skeletonMaxWidth?: number | string
+  skeletonMinWidth?: number | string
 }
 
 const ICON_WIDTH = 16
@@ -137,7 +141,7 @@ export const useStyles = createStyles(({ css, token }, props: StylesProps) => {
 
       // DEFAULT select
       &.ant-select-open, &.ant-select-focused {
-        .ant-select-selection-item {
+        .ant-select-selection-item:not(:has(.pimcore-workflow-place-indicator)) {
           color: ${token.colorPrimary};
         }
 
@@ -147,7 +151,7 @@ export const useStyles = createStyles(({ css, token }, props: StylesProps) => {
       }
 
       &:hover {
-        .ant-select-selection-item {
+        .ant-select-selection-item:not(:has(.pimcore-workflow-place-indicator)) {
           color: ${token.colorPrimary};
         }
 
@@ -263,6 +267,21 @@ export const useStyles = createStyles(({ css, token }, props: StylesProps) => {
 
     customIconError: css`
        color: ${token.colorErrorHover};
-     `
+     `,
+
+    skeletonLoading: css`
+      width: ${toCssDimension(props.skeletonWidth, '100%')};
+      max-width: ${toCssDimension(props.skeletonMaxWidth, '100%')};
+      min-width: ${toCssDimension(props.skeletonMinWidth, 'auto')};
+      display: block;
+
+      .ant-skeleton,
+      .ant-skeleton-input {
+        width: ${toCssDimension(props.skeletonWidth, '100%')} !important;
+        max-width: ${toCssDimension(props.skeletonMaxWidth, '100%')} !important;
+        min-width: ${toCssDimension(props.skeletonMinWidth, 'auto')} !important;
+        display: block;
+      }
+    `
   }
 })

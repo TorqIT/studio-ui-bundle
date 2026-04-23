@@ -66,10 +66,10 @@ export interface ColumnMetaType {
 }
 
 declare module '@tanstack/react-table' {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   export interface ColumnMeta<TData extends RowData, TValue> extends ColumnMetaType { }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   export interface TableMeta<TData extends RowData> {
     onUpdateCellData?: ({ rowIndex, columnId, value }: { rowIndex: number, columnId: string, value: any, rowData: TData, meta?: Record<string, any> }) => void
   }
@@ -91,6 +91,9 @@ export interface GridContextMenuProps extends Pick<AssetGetGridApiResponse['item
   id: number
 }
 
+const DEFAULT_GRID_COLUMN_COUNT = 20
+const DEFAULT_GRID_ROW_COUNT = 20
+
 export const Grid = ({
   enableMultipleRowSelection = false,
   modifiedCells = [],
@@ -108,20 +111,21 @@ export const Grid = ({
   enableRowDrag,
   handleDragEnd,
   enableRowVirtualizer = false,
+  enableColumnVirtualizer = false,
   size = 'normal',
   ...props
 }: GridProps): React.JSX.Element => {
   const { t } = useTranslation()
   const hashId = useCssComponentHash()
-  const { styles } = useStyles({ size, enableVirtualizer: enableRowVirtualizer })
 
   const [columnResizeMode] = useState<ColumnResizeMode>('onChange')
   const [activeCell, setActiveCell] = useState<GridCellReference | undefined>()
   const [tableAutoWidth, setTableAutoWidth] = useState<boolean>(props.autoWidth ?? false)
 
   const tableElement = useRef<HTMLTableElement>(null)
-  const scrollElementRef = useRef<HTMLDivElement>(null) // The row virtualizer will need a reference to the scrollable container element
+  const scrollElementRef = useRef<HTMLDivElement>(null) // ref to the scrollable container used by row and column virtualizers
   const autoColumnRef = useRef<HTMLTableCellElement>(null)
+  const warnedUndefinedRowIdRef = useRef(false)
 
   const isRowSelectionEnabled = useMemo(() => enableMultipleRowSelection || enableRowSelection, [enableMultipleRowSelection, enableRowSelection])
   const [internalSorting, setInternalSorting] = useState<SortingState>(sorting ?? [])
@@ -155,12 +159,12 @@ export const Grid = ({
     () =>
       props.isLoading === true
         ? props.columns.map((column) => ({
-          ...column,
-          cell: <Skeleton.Input
-            active
-            size={ 'small' }
-                />
-        }))
+            ...column,
+            cell: <Skeleton.Input
+              active
+              size={ 'small' }
+                  />
+          }))
         : props.columns,
     [props.isLoading, props.columns]
   ) as Array<ColumnDef<any>>
@@ -184,8 +188,9 @@ export const Grid = ({
   })
 
   useMemo(() => {
+    updateRowDragColumn()
     updateRowSelectionColumn()
-  }, [columns, isRowSelectionEnabled, selectedRows])
+  }, [columns, isRowSelectionEnabled, enableRowDrag, selectedRows])
 
   const tableProps: TableOptions<any> = useMemo(() => ({
     data,
@@ -206,12 +211,27 @@ export const Grid = ({
     onSortingChange: updateSorting,
     enableSorting,
     manualSorting,
-    getRowId: props.setRowId,
+    getRowId: props.setRowId !== undefined
+      ? (originalRow, index, parent): string => {
+          const rowId = props.setRowId?.(originalRow, index, parent)
+
+          if (rowId !== undefined) {
+            return rowId
+          }
+
+          if (props.isLoading !== true && !warnedUndefinedRowIdRef.current) {
+            console.warn('Grid: setRowId returned undefined for at least one row. Falling back to index-based row id for that row. Ensure setRowId always returns a defined string for real data rows.')
+            warnedUndefinedRowIdRef.current = true
+          }
+
+          return parent?.id !== undefined ? `${String(parent.id)}.${String(index)}` : String(index)
+        }
+      : undefined,
     enableMultiSorting: false,
     meta: {
       onUpdateCellData: props.onUpdateCellData
     }
-  }), [data, columns, rowSelection, props.initialState])
+  }), [data, columns, rowSelection, props.initialState, props.setRowId, props.isLoading])
 
   if (props.resizable === true) {
     tableProps.columnResizeMode = columnResizeMode
@@ -288,21 +308,50 @@ export const Grid = ({
   )
 
   const rowsList = table.getRowModel().rows
+  const columnsList = table.getVisibleLeafColumns()
 
+  const isEnableRowVirtualizer = useMemo(() => enableRowVirtualizer && rowsList?.length > DEFAULT_GRID_ROW_COUNT, [enableRowVirtualizer, rowsList])
   const rowVirtualizer = useVirtualizer({
     count: rowsList.length,
     getScrollElement: () => scrollElementRef.current,
     estimateSize: () => 33, // estimate row height for accurate scrollbar dragging
-    overscan: 5,
+    overscan: 5, // number of extra rows to render outside the viewport for smooth scrolling
     measureElement: (el) => el.getBoundingClientRect().height, // measure dynamic row height
-    enabled: enableRowVirtualizer
+    enabled: isEnableRowVirtualizer
   })
   const virtualRows = rowVirtualizer.getVirtualItems()
   const visibleRowIds = useMemo(() => {
-    if (!enableRowVirtualizer) return rowsList.map(row => row.id)
+    if (!isEnableRowVirtualizer) return rowsList.map(row => row.id)
 
     return virtualRows.map(v => rowsList[v.index].id)
-  }, [virtualRows, rowsList, enableRowVirtualizer])
+  }, [virtualRows, rowsList, isEnableRowVirtualizer])
+
+  const isEnableColumnVirtualizer = useMemo(() => {
+    if (props.isLoading === true) return false
+
+    return enableColumnVirtualizer && columnsList?.length > DEFAULT_GRID_COLUMN_COUNT
+  }, [enableColumnVirtualizer, columnsList, props.isLoading])
+  const columnVirtualizer = useVirtualizer({
+    count: columnsList.length,
+    getScrollElement: () => scrollElementRef.current,
+    estimateSize: index => columnsList[index].getSize(), // estimate the width of each column
+    overscan: 5, // number of extra columns to render outside the viewport for smooth scrolling
+    horizontal: true,
+    enabled: isEnableColumnVirtualizer
+  })
+  const virtualColumns = columnVirtualizer.getVirtualItems()
+  let virtualPaddingLeft: number | undefined
+  let virtualPaddingRight: number | undefined
+
+  if (virtualColumns.length > 0) {
+    // Calculate left padding for the scrollable area based on the first visible column
+    virtualPaddingLeft = virtualColumns[0]?.start ?? 0
+
+    // Calculate right padding based on the space after the last visible column
+    virtualPaddingRight = columnVirtualizer.getTotalSize() - (virtualColumns[virtualColumns.length - 1]?.end ?? 0)
+  }
+
+  const { styles } = useStyles({ size, enableRowVirtualizer: isEnableRowVirtualizer, enableColumnVirtualizer: isEnableColumnVirtualizer })
 
   const onDragEndInternal = (event: DragEndEvent): void => {
     handleDragEnd?.(event)
@@ -321,26 +370,27 @@ export const Grid = ({
   }
 
   const renderRows = (): React.JSX.Element[] => {
-    const rowsData = enableRowVirtualizer
+    const rowsData = isEnableRowVirtualizer
       ? virtualRows.map(vRow => ({
-        row: rowsList[vRow.index],
-        virtualIndex: vRow.index,
-        rowStyle: { position: 'absolute', top: `${vRow.start}px` },
-        measureElement: rowVirtualizer.measureElement
-      }))
+          row: rowsList[vRow.index],
+          virtualIndex: vRow.index,
+          rowStyle: { position: 'absolute', top: `${vRow.start}px`, left: 0, right: 0, display: 'flex' },
+          measureElement: rowVirtualizer.measureElement
+        }))
       : rowsList.map(row => ({
-        row,
-        virtualIndex: undefined,
-        rowStyle: {},
-        measureElement: undefined
-      }))
+          row,
+          virtualIndex: undefined,
+          rowStyle: isEnableColumnVirtualizer ? { display: 'flex', width: '100%' } : {},
+          measureElement: undefined
+        }))
 
     return rowsData.map(({ row, virtualIndex, rowStyle, measureElement }) => (
       <GridRow
         activeColumId={ highlightActiveCell && row.index === activeCell?.rowIndex ? activeCell?.columnId : undefined }
         columns={ columns }
         contextMenu={ props.contextMenu }
-        enableRowDrag={ enableRowDrag }
+        enableColumnVirtualizer={ isEnableColumnVirtualizer }
+        enableRowVirtualizer={ isEnableRowVirtualizer }
         isSelected={ row.getIsSelected() }
         key={ row.id }
         measureElement={ measureElement }
@@ -351,7 +401,10 @@ export const Grid = ({
         rowStyle={ rowStyle }
         size={ size }
         tableElement={ tableElement }
+        virtualColumns={ virtualColumns }
         virtualIndex={ virtualIndex }
+        virtualPaddingLeft={ virtualPaddingLeft }
+        virtualPaddingRight={ virtualPaddingRight }
       />
     ))
   }
@@ -383,52 +436,71 @@ export const Grid = ({
               >
                 {!hideColumnHeaders && (
                 <thead className='ant-table-thead'>
-                  {table.getHeaderGroups().map(headerGroup => (
-                    <tr key={ headerGroup.id }>
-                      {headerGroup.headers.map((header, index) => (
-                        <th
-                          className='ant-table-cell'
-                          key={ header.id }
-                          ref={ header.column.columnDef.meta?.autoWidth === true ? autoColumnRef : null }
-                          style={
-                            header.column.columnDef.meta?.autoWidth === true && !header.column.getIsResizing()
-                              ? {
-                                  width: 'auto',
-                                  minWidth: header.column.getSize()
-                                }
-                              : {
-                                  width: header.column.getSize(),
-                                  maxWidth: header.column.getSize()
-                                }
-                          }
-                        >
-                          <div className='grid__cell-content'>
-                            <span>
-                              {flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
+                  {table.getHeaderGroups().map(headerGroup => {
+                    const visibleHeaders = isEnableColumnVirtualizer ? virtualColumns.map(virtualColumn => headerGroup.headers[virtualColumn.index]) : headerGroup.headers
+
+                    return (
+                      <tr
+                        className={ styles.headerRow }
+                        key={ headerGroup.id }
+                        style={
+                          isEnableColumnVirtualizer
+                            ? {
+                                paddingLeft: virtualPaddingLeft,
+                                paddingRight: virtualPaddingRight
+                              }
+                            : undefined
+                        }
+                      >
+                        {visibleHeaders.map(header => {
+                          return (
+                            <th
+                              className='ant-table-cell'
+                              key={ header.id }
+                              ref={ header.column.columnDef.meta?.autoWidth === true ? autoColumnRef : null }
+                              style={
+                                header.column.columnDef.meta?.autoWidth === true && !header.column.getIsResizing()
+                                  ? {
+                                      width: 'auto',
+                                      minWidth: header.column.getSize(),
+                                      ...(isEnableRowVirtualizer ? { flexShrink: 1, flexGrow: 1 } : {})
+                                    }
+                                  : {
+                                      width: header.column.getSize(),
+                                      maxWidth: header.column.getSize(),
+                                      ...(isEnableRowVirtualizer ? { flexShrink: 0 } : {})
+                                    }
+                              }
+                            >
+                              <div className='grid__cell-content'>
+                                <span>
+                                  {flexRender(
+                                    header.column.columnDef.header,
+                                    header.getContext()
+                                  )}
+                                </span>
+
+                                {header.column.getCanSort() && renderSortButton({ headerColumn: header.column })}
+                              </div>
+
+                              {props.resizable === true && header.column.getCanResize() && (
+                              <Resizer
+                                header={ header }
+                                isResizing={ header.column.getIsResizing() }
+                                table={ table }
+                              />
                               )}
-                            </span>
-
-                            {header.column.getCanSort() && renderSortButton({ headerColumn: header.column })}
-                          </div>
-
-                          {props.resizable === true && header.column.getCanResize() && (
-                            <Resizer
-                              header={ header }
-                              isResizing={ header.column.getIsResizing() }
-                              table={ table }
-                            />
-                          )}
-                        </th>
-                      ))}
-                    </tr>
-                  ))}
+                            </th>
+                          )
+                        })}
+                      </tr>
+                    )
+                  })}
                 </thead>
                 )}
                 <tbody
                   className="ant-table-tbody"
-                  style={ { height: enableRowVirtualizer ? `${rowVirtualizer.getTotalSize()}px` : 'initial' } }
+                  style={ { height: isEnableRowVirtualizer ? `${rowVirtualizer.getTotalSize()}px` : 'initial' } }
                 >
                   {rowsList.length === 0 && (
                   <tr className={ 'ant-table-row' }>
@@ -466,7 +538,7 @@ export const Grid = ({
         </div>
       </div>
     </ConfigProvider>
-  ), [table, modifiedCells, table.getTotalSize(), data, columns, rowSelection, internalSorting, highlightActiveCell ? activeCell : undefined, size, virtualRows, rowVirtualizer.getTotalSize(), visibleRowIds])
+  ), [table, modifiedCells, table.getTotalSize(), data, columns, rowSelection, internalSorting, highlightActiveCell ? activeCell : undefined, size, virtualRows, rowVirtualizer.getTotalSize(), visibleRowIds, virtualColumns])
 
   function getModifiedRow (rowIndex: string): GridProps['modifiedCells'] {
     return memoModifiedCells.filter(({ rowIndex: rIndex }) => String(rIndex) === String(rowIndex)) ?? []
@@ -535,6 +607,46 @@ export const Grid = ({
       addRowSelectionColumn()
     } else {
       removeRowSelectionColumn()
+    }
+  }
+
+  function hasRowDragColumn (): boolean {
+    return columns.some(column => column.id === 'drag-handle')
+  }
+
+  function addRowDragColumn (): void {
+    if (hasRowDragColumn()) {
+      return
+    }
+
+    const column: ColumnDef<any> = {
+      id: 'drag-handle',
+      header: '',
+      cell: '',
+      enableResizing: false,
+      size: 50
+    }
+
+    columns.unshift(column)
+  }
+
+  function removeRowDragColumn (): void {
+    if (!hasRowDragColumn()) {
+      return
+    }
+
+    const index = columns.findIndex(column => column.id === 'drag-handle')
+
+    if (index !== -1) {
+      columns.splice(index, 1)
+    }
+  }
+
+  function updateRowDragColumn (): void {
+    if (enableRowDrag === true) {
+      addRowDragColumn()
+    } else {
+      removeRowDragColumn()
     }
   }
 

@@ -43,6 +43,7 @@ export const ChartSettings = ({ currentData }: IReportConfigurationSectionProps)
     >
       <Select
         className={ styles.chartSelect }
+        data-testid={ `report-chart-${name}` }
         mode={ mode }
         options={ chartSelectOptions }
       />
@@ -57,11 +58,15 @@ export const ChartSettings = ({ currentData }: IReportConfigurationSectionProps)
       >
         <Select
           className={ styles.chartSelect }
+          data-testid="report-chart-type"
           options={ CHART_OPTIONS }
         />
       </Form.Item>
 
-      <Conditional condition={ (formValues) => formValues.chartType === CHART_TYPE_PIE }>
+      <Conditional
+        condition={ (formValues) => formValues.chartType === CHART_TYPE_PIE }
+        watchFields={ ['chartType'] }
+      >
         <FormKit.Panel
           border
           contentPadding={ { top: 'none', right: 'small', bottom: 'small', left: 'small' } }
@@ -72,7 +77,10 @@ export const ChartSettings = ({ currentData }: IReportConfigurationSectionProps)
           {renderSelectItem({ label: t('reports.editor.chart-settings.pie-data'), name: 'pieColumn' })}
         </FormKit.Panel>
       </Conditional>
-      <Conditional condition={ (formValues) => formValues.chartType === CHART_TYPE_LINE }>
+      <Conditional
+        condition={ (formValues) => formValues.chartType === CHART_TYPE_LINE }
+        watchFields={ ['chartType'] }
+      >
         <FormKit.Panel
           border
           theme="fieldset"
@@ -82,7 +90,10 @@ export const ChartSettings = ({ currentData }: IReportConfigurationSectionProps)
           {renderSelectItem({ label: t('reports.editor.chart-settings.y-axis'), name: 'yAxis', mode: 'multiple' })}
         </FormKit.Panel>
       </Conditional>
-      <Conditional condition={ (formValues) => formValues.chartType === CHART_TYPE_BAR }>
+      <Conditional
+        condition={ (formValues) => formValues.chartType === CHART_TYPE_BAR }
+        watchFields={ ['chartType'] }
+      >
         <FormKit.Panel
           border
           theme="fieldset"

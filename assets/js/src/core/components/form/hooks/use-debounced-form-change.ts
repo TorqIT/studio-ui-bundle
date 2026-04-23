@@ -8,16 +8,27 @@
  *  @license    Pimcore Open Core License (POCL)
  */
 
-import { useCallback, useRef, useEffect, useMemo } from 'react'
+import { useCallback, useRef, useEffect, useMemo, useLayoutEffect } from 'react'
 import { debounce, isNil, isEmpty } from 'lodash'
 import { uuid } from '@Pimcore/utils/uuid'
-import { container } from '@Pimcore/app/depency-injection'
+import { useInjection } from '@Pimcore/app/depency-injection'
 import { serviceIds } from '@Pimcore/app/config/services/service-ids'
 import { type DebouncedFormRegistry } from '../services/debounced-form-registry'
+import { useDebouncedFormContext } from '../providers/debounced-form-provider'
 
 export interface UseDebouncedFormChangeOptions {
+  /**
+   * If true, debouncing is disabled and the original callback is returned unchanged.
+   */
+  disabled?: boolean
   delay?: number
+  /**
+   * Field names that bypass debouncing and fire onChange immediately.
+   */
   immediateFields?: string[]
+  /**
+   * Tag for registry coordination. Gets auto-resolved from DebouncedFormProvider if omitted.
+   */
   tag?: string
 }
 
@@ -30,17 +41,27 @@ export const useDebouncedFormChange = (
   onFormChange: (changedValues: Record<string, any>, allValues: Record<string, any>) => void,
   options: UseDebouncedFormChangeOptions = {}
 ): UseDebouncedFormChangeReturn => {
-  const { delay = 300, immediateFields = [], tag } = options
+  const { disabled = false, delay = 300, immediateFields = [] } = options
+  const resolvedTag = useDebouncedFormContext(options.tag)
+  const registry = useInjection<DebouncedFormRegistry>(serviceIds.debouncedFormRegistry)
 
-  const registryKey = useMemo(() => `${tag ?? 'default'}-${uuid()}`, [tag])
+  const registryKey = useMemo(() => `${resolvedTag ?? 'default'}-${uuid()}`, [resolvedTag])
+
+  const onFormChangeRef = useRef(onFormChange)
+  useLayoutEffect(() => { onFormChangeRef.current = onFormChange }, [onFormChange])
 
   const debouncedChangeRef = useRef(
     debounce((changedValues: Record<string, any>, allValues: Record<string, any>) => {
-      onFormChange(changedValues, allValues)
+      onFormChangeRef.current(changedValues, allValues)
     }, delay)
   )
 
   const handleFormChange = useCallback((changedValues: Record<string, any>, allValues: Record<string, any>) => {
+    if (disabled) {
+      onFormChange(changedValues, allValues)
+      return
+    }
+
     const immediateChanges: Record<string, any> = {}
     const debouncedChanges: Record<string, any> = {}
 
@@ -66,14 +87,13 @@ export const useDebouncedFormChange = (
   }, [])
 
   useEffect(() => {
-    if (!isNil(tag) && !isEmpty(tag)) {
-      const registry = container.get<DebouncedFormRegistry>(serviceIds.debouncedFormRegistry)
-      registry.register(registryKey, flush, tag)
+    if (!isNil(resolvedTag) && !isEmpty(resolvedTag)) {
+      registry.register(registryKey, flush, resolvedTag)
       return () => {
         registry.unregister(registryKey)
       }
     }
-  }, [registryKey, flush, tag])
+  }, [registry, registryKey, flush, resolvedTag])
 
   return {
     handleFormChange,

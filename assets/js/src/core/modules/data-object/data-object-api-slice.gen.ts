@@ -81,6 +81,16 @@ const injectedRtkApi = api
                 }),
                 providesTags: ["Data Object Grid"],
             }),
+            dataObjectRemoveGridConfigurationAsFavorite: build.mutation<
+                DataObjectRemoveGridConfigurationAsFavoriteApiResponse,
+                DataObjectRemoveGridConfigurationAsFavoriteApiArg
+            >({
+                query: (queryArg) => ({
+                    url: `/pimcore-studio/api/data-object/grid/configuration/remove-favorite/${queryArg.configurationId}/${queryArg.folderId}`,
+                    method: "DELETE",
+                }),
+                invalidatesTags: ["Data Object Grid"],
+            }),
             dataObjectSaveGridConfiguration: build.mutation<
                 DataObjectSaveGridConfigurationApiResponse,
                 DataObjectSaveGridConfigurationApiArg
@@ -176,7 +186,7 @@ const injectedRtkApi = api
                 DataObjectPatchFolderByIdApiArg
             >({
                 query: (queryArg) => ({
-                    url: `/pimcore-studio/api/data-objects/folder`,
+                    url: `/pimcore-studio/api/data-objects/folder/${queryArg.id}`,
                     method: "PATCH",
                     body: queryArg.body,
                 }),
@@ -318,7 +328,7 @@ export type DataObjectDeleteGridConfigurationByConfigurationIdApiArg = {
     configurationId: number;
 };
 export type DataObjectGetGridConfigurationApiResponse =
-    /** status 200 data_object_get_grid_configuration_success_response */ GridDetailedConfiguration;
+    /** status 200 Data Object grid configuration */ GridDetailedConfiguration;
 export type DataObjectGetGridConfigurationApiArg = {
     /** FolderId of the element */
     folderId: number;
@@ -335,6 +345,13 @@ export type DataObjectListSavedGridConfigurationsApiResponse =
 export type DataObjectListSavedGridConfigurationsApiArg = {
     /** Class Id of the data object */
     classId: string;
+};
+export type DataObjectRemoveGridConfigurationAsFavoriteApiResponse = unknown;
+export type DataObjectRemoveGridConfigurationAsFavoriteApiArg = {
+    /** ConfigurationId of the configurationId */
+    configurationId: number;
+    /** FolderId of the folderId */
+    folderId: number;
 };
 export type DataObjectSaveGridConfigurationApiResponse =
     /** status 200 Data Object grid configuration saved successfully */ GridConfiguration;
@@ -459,10 +476,10 @@ export type DataObjectPatchFolderByIdApiResponse =
         jobRunId: number;
     };
 export type DataObjectPatchFolderByIdApiArg = {
+    /** Id of the folder */
+    id: number;
     body: {
         data: {
-            /** Folder ID */
-            folderId: number;
             parentId?: number | null;
             index?: number | null;
             key?: string | null;
@@ -471,7 +488,7 @@ export type DataObjectPatchFolderByIdApiArg = {
             childrenSortOrder?: string | null;
             published?: boolean | null;
             editableData?: object | null;
-        }[];
+        };
         filters?: ExportAllFilter;
         classId: string;
     };
@@ -877,9 +894,9 @@ export type Layout = {
     /** Name */
     name: string;
     /** Data Type */
-    dataType: string;
+    datatype: string;
     /** Field Type */
-    fieldType: string;
+    fieldtype: string;
     /** Type */
     type: string | null;
     /** Layout */
@@ -923,9 +940,9 @@ export type SelectOption = {
         [key: string]: string | number | boolean | object;
     };
     /** Object Reference */
-    objectReference: string;
+    objectReference: string | number;
     /** Formated Path */
-    formatedPath: string;
+    formatedPath: string | number;
 };
 export type SelectOption2 = {
     /** AdditionalAttributes */
@@ -947,6 +964,7 @@ export const {
     useDataObjectDeleteGridConfigurationByConfigurationIdMutation,
     useDataObjectGetGridConfigurationQuery,
     useDataObjectListSavedGridConfigurationsQuery,
+    useDataObjectRemoveGridConfigurationAsFavoriteMutation,
     useDataObjectSaveGridConfigurationMutation,
     useDataObjectSetGridConfigurationAsFavoriteMutation,
     useDataObjectUpdateGridConfigurationMutation,

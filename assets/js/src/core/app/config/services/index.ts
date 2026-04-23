@@ -57,6 +57,7 @@ import { DynamicTypeFieldFilterMultiselect } from '@Pimcore/modules/element/dyna
 import { DynamicTypeFieldFilterString } from '@Pimcore/modules/element/dynamic-types/definitions/field-filters/types/string/dynamic-type-field-filter-string'
 import { DynamicTypeGridCellRegistry } from '@Pimcore/modules/element/dynamic-types/definitions/grid-cell/dynamic-type-grid-cell-registry'
 import { DynamicTypeGridCellDependencyTypeIcon } from '@Pimcore/modules/element/dynamic-types/definitions/grid-cell/types/_dependencies/dynamic-type-grid-cell-dependency-type-icon'
+import { DynamicTypeGridCellElementSubtypeIcon } from '@Pimcore/modules/element/dynamic-types/definitions/grid-cell/types/element-subtype-icon/dynamic-type-grid-cell-element-subtype-icon'
 import { DynamicTypeGridCellAssetCustomMetadataIcon } from '@Pimcore/modules/element/dynamic-types/definitions/grid-cell/types/_meta-data/dynamic-type-grid-cell-asset-custom-metadata-icon'
 import { DynamicTypeGridCellAssetCustomMetadataValue } from '@Pimcore/modules/element/dynamic-types/definitions/grid-cell/types/_meta-data/dynamic-type-grid-cell-asset-custom-metadata-value'
 import { DynamicTypeGridCellPropertyIcon } from '@Pimcore/modules/element/dynamic-types/definitions/grid-cell/types/_properties/dynamic-type-grid-cell-property-icon'
@@ -271,21 +272,112 @@ import { DynamicTypeFieldFilterQuantityValue } from '@Pimcore/modules/element/dy
 import { DynamicTypeFieldFilterColor } from '@Pimcore/modules/element/dynamic-types/definitions/field-filters/types/color/dynamic-type-field-filter-color'
 import { DynamicTypeFieldFilterDatetime } from '@Pimcore/modules/element/dynamic-types/definitions/field-filters/types/datetime/dynamic-type-field-filter-datetime'
 import { DynamicTypeFieldFilterTime } from '@Pimcore/modules/element/dynamic-types/definitions/field-filters/types/time/dynamic-type-field-filter-time'
+import { DynamicTypeFieldFilterRelation } from '@Pimcore/modules/element/dynamic-types/definitions/field-filters/types/relation/dynamic-type-field-filter-relation'
 import { AppLoaderRegistry } from '@Pimcore/modules/app/app-loader/services/app-loader-registry'
 import { DynamicTypeObjectLayoutIframe } from '@Pimcore/modules/element/dynamic-types/definitions/objects/layout-related/types/dynamic-type-object-layout-iframe'
-import { DynamicTypeFieldDefinitionInput } from '@Pimcore/modules/field-definitions/dynamic-types/types/input/dynamic-type-field-definition-input'
-import { DynamicTypeFieldDefinitionTextarea } from '@Pimcore/modules/field-definitions/dynamic-types/types/textarea/dynamic-type-field-definition-textarea'
-import { DynamicTypeFieldDefinitionWysiwyg } from '@Pimcore/modules/field-definitions/dynamic-types/types/wysiwyg/dynamic-type-field-definition-wysiwyg'
-import { DynamicTypeFieldDefinitionPassword } from '@Pimcore/modules/field-definitions/dynamic-types/types/password/dynamic-type-field-definition-password'
-import { DynamicTypeFieldDefinitionInputQuantityValue } from '@Pimcore/modules/field-definitions/dynamic-types/types/inputQuantityValue/dynamic-type-field-definition-input-quantity-value'
-import { DynamicTypeFieldDefinitionPanel } from '@Pimcore/modules/field-definitions/dynamic-types/types/panel/dynamic-type-field-definition-panel'
+import { DynamicTypeFieldDefinitionInput } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/input/dynamic-type-field-definition-input'
+import { DynamicTypeFieldDefinitionTextarea } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/textarea/dynamic-type-field-definition-textarea'
+import { DynamicTypeFieldDefinitionWysiwyg } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/wysiwyg/dynamic-type-field-definition-wysiwyg'
+import { DynamicTypeFieldDefinitionPassword } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/password/dynamic-type-field-definition-password'
+import { DynamicTypeFieldDefinitionInputQuantityValue } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/inputQuantityValue/dynamic-type-field-definition-input-quantity-value'
+import { DynamicTypeFieldDefinitionNumber } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/number/dynamic-type-field-definition-number'
+import { DynamicTypeFieldDefinitionNumericRange } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/numericRange/dynamic-type-field-definition-numeric-range'
+import { DynamicTypeFieldDefinitionSlider } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/slider/dynamic-type-field-definition-slider'
+import { DynamicTypeFieldDefinitionQuantityValue } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/quantityValue/dynamic-type-field-definition-quantity-value'
+import { DynamicTypeFieldDefinitionQuantityValueRange } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/quantityValueRange/dynamic-type-field-definition-quantity-value-range'
+import { DynamicTypeFieldDefinitionDate } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/date/dynamic-type-field-definition-date'
+import { DynamicTypeFieldDefinitionDateTime } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/dateTime/dynamic-type-field-definition-date-time'
+import { DynamicTypeFieldDefinitionDateRange } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/dateRange/dynamic-type-field-definition-date-range'
+import { DynamicTypeFieldDefinitionTime } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/time/dynamic-type-field-definition-time'
+import { DynamicTypeFieldDefinitionImage } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/image/dynamic-type-field-definition-image'
+import { DynamicTypeFieldDefinitionExternalImage } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/externalImage/dynamic-type-field-definition-external-image'
+import { DynamicTypeFieldDefinitionImageGallery } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/imageGallery/dynamic-type-field-definition-image-gallery'
+import { DynamicTypeFieldDefinitionVideo } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/video/dynamic-type-field-definition-video'
+import { DynamicTypeFieldDefinitionHotspotImage } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/imageAdvanced/dynamic-type-field-definition-hotspot-image'
+import { DynamicTypeFieldDefinitionGeopoint } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/geopoint/dynamic-type-field-definition-geopoint'
+import { DynamicTypeFieldDefinitionGeobounds } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/geobounds/dynamic-type-field-definition-geobounds'
+import { DynamicTypeFieldDefinitionGeopolygon } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/geopolygon/dynamic-type-field-definition-geopolygon'
+import { DynamicTypeFieldDefinitionGeopolyline } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/geopolyline/dynamic-type-field-definition-geopolyline'
+import { DynamicTypeFieldDefinitionFirstname } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/firstname/dynamic-type-field-definition-firstname'
+import { DynamicTypeFieldDefinitionLastname } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/lastname/dynamic-type-field-definition-lastname'
+import { DynamicTypeFieldDefinitionEmail } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/email/dynamic-type-field-definition-email'
+import { DynamicTypeFieldDefinitionGender } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/gender/dynamic-type-field-definition-gender'
+import { DynamicTypeFieldDefinitionConsent } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/consent/dynamic-type-field-definition-consent'
+import { DynamicTypeFieldDefinitionSelect } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/select/dynamic-type-field-definition-select'
+import { DynamicTypeFieldDefinitionBooleanSelect } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/booleanSelect/dynamic-type-field-definition-boolean-select'
+import { DynamicTypeFieldDefinitionMultiselection } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/multiselection/dynamic-type-field-definition-multiselection'
+import { DynamicTypeFieldDefinitionUser } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/user/dynamic-type-field-definition-user'
+import { DynamicTypeFieldDefinitionCountry } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/country/dynamic-type-field-definition-country'
+import { DynamicTypeFieldDefinitionLanguage } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/language/dynamic-type-field-definition-language'
+import { DynamicTypeFieldDefinitionCountryMultiselect } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/countrymultiselect/dynamic-type-field-definition-countrymultiselect'
+import { DynamicTypeFieldDefinitionLanguageMultiselect } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/languagemultiselect/dynamic-type-field-definition-languagemultiselect'
+import { DynamicTypeFieldDefinitionRgbaColor } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/rgbaColor/dynamic-type-field-definition-rgba-color'
+import { DynamicTypeFieldDefinitionEncryptedField } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/encryptedField/dynamic-type-field-definition-encrypted-field'
+import { DynamicTypeFieldDefinitionUrlSlug } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/urlSlug/dynamic-type-field-definition-url-slug'
+import { DynamicTypeFieldDefinitionCheckbox } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/checkbox/dynamic-type-field-definition-checkbox'
+import { DynamicTypeFieldDefinitionLink } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/link/dynamic-type-field-definition-link'
+import { DynamicTypeFieldDefinitionCalculatedValue } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/calculatedValue/dynamic-type-field-definition-calculated-value'
+import { DynamicTypeFieldDefinitionManyToOne } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/manyToOneRelation/dynamic-type-field-definition-many-to-one'
+import { DynamicTypeFieldDefinitionManyToMany } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/manyToManyRelation/dynamic-type-field-definition-many-to-many'
+import { DynamicTypeFieldDefinitionManyToManyObject } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/manyToManyObjectRelation/dynamic-type-field-definition-many-to-many-object'
+import { DynamicTypeFieldDefinitionAdvancedManyToMany } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/advancedManyToManyRelation/dynamic-type-field-definition-advanced-many-to-many'
+import { DynamicTypeFieldDefinitionAdvancedManyToManyObject } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/advancedManyToManyObjectRelation/dynamic-type-field-definition-advanced-many-to-many-object'
+import { DynamicTypeFieldDefinitionReverseObject } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/reverseObjectRelation/dynamic-type-field-definition-reverse-object'
+import { DynamicTypeFieldDefinitionPanel } from '@Pimcore/modules/field-definitions/dynamic-types/types/layout/panel/dynamic-type-field-definition-panel'
+import { DynamicTypeFieldDefinitionFieldContainer } from '@Pimcore/modules/field-definitions/dynamic-types/types/layout/fieldcontainer/dynamic-type-field-definition-field-container'
+import { DynamicTypeFieldDefinitionFieldset } from '@Pimcore/modules/field-definitions/dynamic-types/types/layout/fieldset/dynamic-type-field-definition-fieldset'
+import { DynamicTypeFieldDefinitionIframe } from '@Pimcore/modules/field-definitions/dynamic-types/types/layout/iframe/dynamic-type-field-definition-iframe'
+import { DynamicTypeFieldDefinitionAccordion } from '@Pimcore/modules/field-definitions/dynamic-types/types/layout/accordion/dynamic-type-field-definition-accordion'
+import { DynamicTypeFieldDefinitionRegion } from '@Pimcore/modules/field-definitions/dynamic-types/types/layout/region/dynamic-type-field-definition-region'
+import { DynamicTypeFieldDefinitionTabpanel } from '@Pimcore/modules/field-definitions/dynamic-types/types/layout/tabpanel/dynamic-type-field-definition-tabpanel'
+import { DynamicTypeFieldDefinitionText } from '@Pimcore/modules/field-definitions/dynamic-types/types/layout/text/dynamic-type-field-definition-text'
 import { DynamicTypeFieldDefinitionRegistry } from '@Pimcore/modules/field-definitions/dynamic-types/dynamic-type-field-definition-registry'
-import { DynamicTypeFieldDefinitionBlock } from '@Pimcore/modules/field-definitions/dynamic-types/types/block/dynamic-type-field-definition-block'
+import { DynamicTypeFieldDefinitionBlock } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/block/dynamic-type-field-definition-block'
+import { DynamicTypeFieldDefinitionTable } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/table/dynamic-type-field-definition-table'
+import { DynamicTypeFieldDefinitionStructuredTable } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/structuredTable/dynamic-type-field-definition-structured-table'
+import { DynamicTypeFieldDefinitionFieldcollections } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/fieldcollections/dynamic-type-field-definition-fieldcollections'
+import { DynamicTypeFieldDefinitionObjectbricks } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/objectbricks/dynamic-type-field-definition-objectbricks'
+import { DynamicTypeFieldDefinitionClassificationstore } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/classificationstore/dynamic-type-field-definition-classificationstore'
+import { DynamicTypeFieldDefinitionLocalizedfields } from '@Pimcore/modules/field-definitions/dynamic-types/types/data/localizedfields/dynamic-type-field-definition-localizedfields'
 import { DynamicTypeGDPRProviderRegistry } from '@Pimcore/modules/gdpr-data-extractor/dynamic-types/registry/dynamic-type-gdpr-provider-registry'
 import { DynamicTypeDataObjectGDPRProvider } from '@Pimcore/modules/gdpr-data-extractor/dynamic-types/definitions/dynamic-type-data-object-gdpr-provider'
 import { DynamicTypeAssetsGDPRProvider } from '@Pimcore/modules/gdpr-data-extractor/dynamic-types/definitions/dynamic-type-assets-gdpr-provider'
 import { DynamicTypeUsersGDPRProvider } from '@Pimcore/modules/gdpr-data-extractor/dynamic-types/definitions/dynamic-type-users-gdpr-provider'
 import { DynamicTypeEmailsGDPRProvider } from '@Pimcore/modules/gdpr-data-extractor/dynamic-types/definitions/dynamic-type-email-gdpr-provider'
+import { TransformationDynamicTypeRegistry } from '@Pimcore/modules/image-thumbnails/dynamic-types/transformation-dynamic-type-registry'
+import { TransformationFieldCollectionRegistry } from '@Pimcore/modules/image-thumbnails/registries/transformation-field-collection-registry'
+import { CoverTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/cover/cover-transformation-type'
+import { ResizeTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/resize/resize-transformation-type'
+import { ScaleByWidthTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/scale-by-width/scale-by-width-transformation-type'
+import { ScaleByHeightTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/scale-by-height/scale-by-height-transformation-type'
+import { TrimTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/trim/trim-transformation-type'
+import { SepiaTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/sepia/sepia-transformation-type'
+import { GrayscaleTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/grayscale/grayscale-transformation-type'
+import { SharpenTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/sharpen/sharpen-transformation-type'
+import { ContainTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/contain/contain-transformation-type'
+import { CropTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/crop/crop-transformation-type'
+import { FrameTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/frame/frame-transformation-type'
+import { RotateTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/rotate/rotate-transformation-type'
+import { MirrorTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/mirror/mirror-transformation-type'
+import { GaussianBlurTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/gaussian-blur/gaussian-blur-transformation-type'
+import { BrightnessSaturationTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/brightness-saturation/brightness-saturation-transformation-type'
+import { SetBackgroundColorTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/set-background-color/set-background-color-transformation-type'
+import { SetBackgroundImageTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/set-background-image/set-background-image-transformation-type'
+import { RoundCornersTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/round-corners/round-corners-transformation-type'
+import { AddOverlayTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/add-overlay/add-overlay-transformation-type'
+import { AddOverlayFitTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/add-overlay-fit/add-overlay-fit-transformation-type'
+import { ApplyMaskTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/apply-mask/apply-mask-transformation-type'
+import { TiffOriginalTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/tiff-original/tiff-original-transformation-type'
+import { OnePixelTransformationType } from '@Pimcore/modules/image-thumbnails/dynamic-types/one-pixel/one-pixel-transformation-type'
+import { VideoTransformationDynamicTypeRegistry } from '@Pimcore/modules/video-thumbnails/dynamic-types/video-transformation-dynamic-type-registry'
+import { VideoTransformationFieldCollectionRegistry } from '@Pimcore/modules/video-thumbnails/registries/video-transformation-field-collection-registry'
+import { ResizeVideoTransformationType } from '@Pimcore/modules/video-thumbnails/dynamic-types/resize/resize-transformation-type'
+import { ScaleByWidthVideoTransformationType } from '@Pimcore/modules/video-thumbnails/dynamic-types/scale-by-width/scale-by-width-transformation-type'
+import { ScaleByHeightVideoTransformationType } from '@Pimcore/modules/video-thumbnails/dynamic-types/scale-by-height/scale-by-height-transformation-type'
+import { CutVideoTransformationType } from '@Pimcore/modules/video-thumbnails/dynamic-types/cut/cut-transformation-type'
+import { SetFramerateVideoTransformationType } from '@Pimcore/modules/video-thumbnails/dynamic-types/set-framerate/set-framerate-transformation-type'
+import { ColorChannelMixerVideoTransformationType } from '@Pimcore/modules/video-thumbnails/dynamic-types/color-channel-mixer/color-channel-mixer-transformation-type'
+import { MuteVideoTransformationType } from '@Pimcore/modules/video-thumbnails/dynamic-types/mute/mute-transformation-type'
 
 // Component registry
 container.bind(serviceIds['App/ComponentRegistry/ComponentRegistry']).to(ComponentRegistry).inSingletonScope()
@@ -380,6 +472,7 @@ container.bind(serviceIds['DynamicTypes/FieldFilter/QuantityValue']).to(DynamicT
 container.bind(serviceIds['DynamicTypes/FieldFilter/Color']).to(DynamicTypeFieldFilterColor).inSingletonScope()
 container.bind(serviceIds['DynamicTypes/FieldFilter/Datetime']).to(DynamicTypeFieldFilterDatetime).inSingletonScope()
 container.bind(serviceIds['DynamicTypes/FieldFilter/Time']).to(DynamicTypeFieldFilterTime).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldFilter/Relation']).to(DynamicTypeFieldFilterRelation).inSingletonScope()
 // dynamic types batch edit
 container.bind(serviceIds['DynamicTypes/BatchEditRegistry']).to(DynamicTypeBatchEditRegistry).inSingletonScope()
 container.bind(serviceIds['DynamicTypes/BatchEdit/Text']).to(DynamicTypeBatchEditText).inSingletonScope()
@@ -412,6 +505,7 @@ container.bind(serviceIds['DynamicTypes/GridCell/AssetPreview']).to(DynamicTypeG
 container.bind(serviceIds['DynamicTypes/GridCell/AssetActions']).to(DynamicTypeGridCellAssetActions).inSingletonScope()
 container.bind(serviceIds['DynamicTypes/GridCell/DataObjectActions']).to(DynamicTypeGridCellDataObjectActions).inSingletonScope()
 container.bind(serviceIds['DynamicTypes/GridCell/DependencyTypeIcon']).to(DynamicTypeGridCellDependencyTypeIcon).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/GridCell/ElementSubtypeIcon']).to(DynamicTypeGridCellElementSubtypeIcon).inSingletonScope()
 container.bind(serviceIds['DynamicTypes/GridCell/AssetCustomMetadataIcon']).to(DynamicTypeGridCellAssetCustomMetadataIcon).inSingletonScope()
 container.bind(serviceIds['DynamicTypes/GridCell/AssetCustomMetadataValue']).to(DynamicTypeGridCellAssetCustomMetadataValue).inSingletonScope()
 container.bind(serviceIds['DynamicTypes/GridCell/PropertyIcon']).to(DynamicTypeGridCellPropertyIcon).inSingletonScope()
@@ -644,7 +738,107 @@ container.bind(serviceIds['DynamicTypes/FieldDefinition/Textarea']).to(DynamicTy
 container.bind(serviceIds['DynamicTypes/FieldDefinition/Wysiwyg']).to(DynamicTypeFieldDefinitionWysiwyg).inSingletonScope()
 container.bind(serviceIds['DynamicTypes/FieldDefinition/Password']).to(DynamicTypeFieldDefinitionPassword).inSingletonScope()
 container.bind(serviceIds['DynamicTypes/FieldDefinition/InputQuantityValue']).to(DynamicTypeFieldDefinitionInputQuantityValue).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Number']).to(DynamicTypeFieldDefinitionNumber).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/NumericRange']).to(DynamicTypeFieldDefinitionNumericRange).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Slider']).to(DynamicTypeFieldDefinitionSlider).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/QuantityValue']).to(DynamicTypeFieldDefinitionQuantityValue).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/QuantityValueRange']).to(DynamicTypeFieldDefinitionQuantityValueRange).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Date']).to(DynamicTypeFieldDefinitionDate).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/DateTime']).to(DynamicTypeFieldDefinitionDateTime).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/DateRange']).to(DynamicTypeFieldDefinitionDateRange).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Time']).to(DynamicTypeFieldDefinitionTime).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Image']).to(DynamicTypeFieldDefinitionImage).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/ExternalImage']).to(DynamicTypeFieldDefinitionExternalImage).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/ImageGallery']).to(DynamicTypeFieldDefinitionImageGallery).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Video']).to(DynamicTypeFieldDefinitionVideo).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/HotspotImage']).to(DynamicTypeFieldDefinitionHotspotImage).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Geopoint']).to(DynamicTypeFieldDefinitionGeopoint).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Geobounds']).to(DynamicTypeFieldDefinitionGeobounds).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Geopolygon']).to(DynamicTypeFieldDefinitionGeopolygon).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Geopolyline']).to(DynamicTypeFieldDefinitionGeopolyline).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Select']).to(DynamicTypeFieldDefinitionSelect).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/BooleanSelect']).to(DynamicTypeFieldDefinitionBooleanSelect).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Multiselect']).to(DynamicTypeFieldDefinitionMultiselection).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/User']).to(DynamicTypeFieldDefinitionUser).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Country']).to(DynamicTypeFieldDefinitionCountry).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Language']).to(DynamicTypeFieldDefinitionLanguage).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/CountryMultiselect']).to(DynamicTypeFieldDefinitionCountryMultiselect).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/LanguageMultiselect']).to(DynamicTypeFieldDefinitionLanguageMultiselect).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/RgbaColor']).to(DynamicTypeFieldDefinitionRgbaColor).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/EncryptedField']).to(DynamicTypeFieldDefinitionEncryptedField).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/UrlSlug']).to(DynamicTypeFieldDefinitionUrlSlug).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Checkbox']).to(DynamicTypeFieldDefinitionCheckbox).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Link']).to(DynamicTypeFieldDefinitionLink).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/CalculatedValue']).to(DynamicTypeFieldDefinitionCalculatedValue).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/ManyToOne']).to(DynamicTypeFieldDefinitionManyToOne).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/ManyToMany']).to(DynamicTypeFieldDefinitionManyToMany).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/ManyToManyObject']).to(DynamicTypeFieldDefinitionManyToManyObject).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/AdvancedManyToMany']).to(DynamicTypeFieldDefinitionAdvancedManyToMany).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/AdvancedManyToManyObject']).to(DynamicTypeFieldDefinitionAdvancedManyToManyObject).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/ReverseObject']).to(DynamicTypeFieldDefinitionReverseObject).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Accordion']).to(DynamicTypeFieldDefinitionAccordion).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/FieldContainer']).to(DynamicTypeFieldDefinitionFieldContainer).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Fieldset']).to(DynamicTypeFieldDefinitionFieldset).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Iframe']).to(DynamicTypeFieldDefinitionIframe).inSingletonScope()
 container.bind(serviceIds['DynamicTypes/FieldDefinition/Panel']).to(DynamicTypeFieldDefinitionPanel).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Region']).to(DynamicTypeFieldDefinitionRegion).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Tabpanel']).to(DynamicTypeFieldDefinitionTabpanel).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Text']).to(DynamicTypeFieldDefinitionText).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Table']).to(DynamicTypeFieldDefinitionTable).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/StructuredTable']).to(DynamicTypeFieldDefinitionStructuredTable).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Fieldcollections']).to(DynamicTypeFieldDefinitionFieldcollections).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Objectbricks']).to(DynamicTypeFieldDefinitionObjectbricks).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Classificationstore']).to(DynamicTypeFieldDefinitionClassificationstore).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Localizedfields']).to(DynamicTypeFieldDefinitionLocalizedfields).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Firstname']).to(DynamicTypeFieldDefinitionFirstname).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Lastname']).to(DynamicTypeFieldDefinitionLastname).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Email']).to(DynamicTypeFieldDefinitionEmail).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Gender']).to(DynamicTypeFieldDefinitionGender).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/FieldDefinition/Consent']).to(DynamicTypeFieldDefinitionConsent).inSingletonScope()
+
+// Image Thumbnails Transformation Registry
+container.bind(serviceIds['DynamicTypes/TransformationDynamicTypeRegistry']).to(TransformationDynamicTypeRegistry).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/TransformationFieldCollectionRegistry']).toDynamicValue((ctx) => {
+  const transformationRegistry = ctx.container.get<TransformationDynamicTypeRegistry>(serviceIds['DynamicTypes/TransformationDynamicTypeRegistry'])
+  return new TransformationFieldCollectionRegistry(transformationRegistry)
+}).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/Cover']).to(CoverTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/Resize']).to(ResizeTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/ScaleByWidth']).to(ScaleByWidthTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/ScaleByHeight']).to(ScaleByHeightTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/Trim']).to(TrimTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/Sepia']).to(SepiaTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/Grayscale']).to(GrayscaleTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/Sharpen']).to(SharpenTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/Contain']).to(ContainTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/Crop']).to(CropTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/Frame']).to(FrameTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/Rotate']).to(RotateTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/Mirror']).to(MirrorTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/GaussianBlur']).to(GaussianBlurTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/BrightnessSaturation']).to(BrightnessSaturationTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/SetBackgroundColor']).to(SetBackgroundColorTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/SetBackgroundImage']).to(SetBackgroundImageTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/RoundCorners']).to(RoundCornersTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/AddOverlay']).to(AddOverlayTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/AddOverlayFit']).to(AddOverlayFitTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/ApplyMask']).to(ApplyMaskTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/TiffOriginal']).to(TiffOriginalTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/Transformation/OnePixel']).to(OnePixelTransformationType).inSingletonScope()
+
+// Video Thumbnails Transformation Registry
+container.bind(serviceIds['DynamicTypes/VideoTransformationDynamicTypeRegistry']).to(VideoTransformationDynamicTypeRegistry).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/VideoTransformationFieldCollectionRegistry']).toDynamicValue((ctx) => {
+  const videoTransformationRegistry = ctx.container.get<VideoTransformationDynamicTypeRegistry>(serviceIds['DynamicTypes/VideoTransformationDynamicTypeRegistry'])
+  return new VideoTransformationFieldCollectionRegistry(videoTransformationRegistry)
+}).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/VideoTransformation/Resize']).to(ResizeVideoTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/VideoTransformation/ScaleByWidth']).to(ScaleByWidthVideoTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/VideoTransformation/ScaleByHeight']).to(ScaleByHeightVideoTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/VideoTransformation/Cut']).to(CutVideoTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/VideoTransformation/SetFramerate']).to(SetFramerateVideoTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/VideoTransformation/ColorChannelMixer']).to(ColorChannelMixerVideoTransformationType).inSingletonScope()
+container.bind(serviceIds['DynamicTypes/VideoTransformation/Mute']).to(MuteVideoTransformationType).inSingletonScope()
 
 // GDPR Provider
 container.bind(serviceIds['DynamicTypes/GDPRProviderRegistry']).to(DynamicTypeGDPRProviderRegistry).inSingletonScope()

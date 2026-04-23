@@ -9,19 +9,25 @@
  */
 
 import { useAddModal } from '@Pimcore/modules/field-definitions/components/editor/items/sidebar/add-modal'
+import { useSettings } from '@Pimcore/modules/field-definitions/components/editor/settings-provider'
 import { IconTextButton } from '@sdk/components'
 import React from 'react'
 
 export const AddModalTrigger = (): React.JSX.Element => {
   const { openModal } = useAddModal()
+  const { AddModal } = useSettings()
+
+  if (AddModal === undefined) {
+    return <></>
+  }
 
   // @todo check icon
   return (
     <IconTextButton
-      icon={ { value: 'layout' } }
+      icon={ { value: 'new-something' } }
       onClick={ openModal }
     >
-      Open Add Modal
+      New layout
     </IconTextButton>
   )
 }

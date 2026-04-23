@@ -16,6 +16,7 @@ export enum UserPermission {
   DocumentTypes = 'document_types',
   Objects = 'objects',
   Assets = 'assets',
+  Thumbnails = 'thumbnails',
   TagsConfiguration = 'tags_configuration',
   PredefinedProperties = 'predefined_properties',
   WebsiteSettings = 'website_settings',
@@ -30,5 +31,13 @@ export enum UserPermission {
   ApplicationLogger = 'application_logging',
   PerspectiveEditor = 'studio_perspective_editor',
   WidgetEditor = 'studio_perspective_widget_editor',
-  GDPRDataExtractor = 'gdpr_data_extractor'
+  GDPRDataExtractor = 'gdpr_data_extractor',
+  SystemSettings = 'system_settings',
+  Classes = 'classes',
+  FieldCollections = 'fieldcollections',
+  ObjectBricks = 'objectbricks',
+  ClassificationStore = 'classificationstore',
+  SelectOptions = 'selectoptions',
+  QuantityValues = 'quantityValueUnits',
+  AssetMetadata = 'asset_metadata'
 }

@@ -228,7 +228,7 @@ const TreeNode = forwardRef(function ForwardedTreeNode ({
       role='button'
       style={
           {
-            paddingLeft: token.paddingSM + 20 * level,
+            paddingLeft: token.paddingMD * level,
             minWidth: `${20 * level + 200}px`
           }
         }
@@ -237,7 +237,6 @@ const TreeNode = forwardRef(function ForwardedTreeNode ({
       <Flex
         align="center"
         className='tree-node__content-wrapper-outer w-full'
-        gap="small"
         justify="center"
       >
         {isRoot !== true && (
@@ -256,7 +255,7 @@ const TreeNode = forwardRef(function ForwardedTreeNode ({
   return (
     <div
       className={ getClasses() }
-      data-testid={ createNodeTestId(parseInt(id, 10), props.elementType) }
+      data-testid={ createNodeTestId(id, props.elementType) }
       ref={ forwardRef }
     >
       {!isNil(tooltipSlotName)

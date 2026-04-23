@@ -11,6 +11,7 @@
 import { useClassDefinitionUpdateMutation } from '@Pimcore/modules/class-definition/class-definition-slice.gen'
 import { useGeneralSettings } from '@Pimcore/modules/field-definitions/components/editor/items/detail/general-settings-provider'
 import { useLayout } from '@Pimcore/modules/field-definitions/components/editor/items/detail/layout-provider'
+import { type ElementIcon } from '@Pimcore/modules/class-definition/class-definition-slice.gen'
 import { type AnyMutationHook } from 'types/react-query'
 
 export const useClassDefinitionUpdate: AnyMutationHook = (options) => {
@@ -20,15 +21,14 @@ export const useClassDefinitionUpdate: AnyMutationHook = (options) => {
 
   const decoratedFetch = (): ReturnType<typeof fetch> => {
     return fetch({
-      id: generalSettings!.id,
+      id: generalSettings!.id as string,
       classDefinitionUpdate: {
         configuration: {
-          children: getLayout().children ?? []
+          children: getLayout()!.children ?? []
         },
         values: {
           ...generalSettings!,
-          // @todo check how to handle new icon types with backend
-          icon: ''
+          icon: (generalSettings!.icon as ElementIcon)?.value ?? ''
         }
       }
     })

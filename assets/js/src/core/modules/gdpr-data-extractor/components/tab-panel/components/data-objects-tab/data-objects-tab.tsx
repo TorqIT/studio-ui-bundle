@@ -12,12 +12,14 @@ import { Flex } from '@Pimcore/components/flex/flex'
 import { Grid } from '@Pimcore/components/grid/grid'
 import { elementTypes } from '@sdk/modules/data-object'
 import { createColumnHelper } from '@tanstack/react-table'
-import React from 'react'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeleteButton } from '../../../delete-button/delete-button'
 import { ExportButton } from '../../../export-button/export-button'
 import { OpenButton } from '../../../open-button/open-button'
 import { type GDPRProviderTabProps } from '../../tab-panel'
+import { type SortFilter } from '@Pimcore/modules/app/types/sort-filter'
+import { transformToSortFilter, transformToSortingState } from '@Pimcore/modules/app/utils/sort-filter-helper'
 
 interface DataObjectRow {
   data: {
@@ -36,14 +38,21 @@ type DataObjectTable = DataObjectRow['data'] & {
 export interface DataObjectsTabProps extends GDPRProviderTabProps<DataObjectRow> {
 }
 
-export const DataObjectsTab = ({ data, providerKey, ...props }: DataObjectsTabProps): React.JSX.Element => {
+export const DataObjectsTab = ({ data, providerKey, onSortingChange, ...props }: DataObjectsTabProps): React.JSX.Element => {
   const { t } = useTranslation()
+  const [sortFilter, setSortFilter] = useState<SortFilter>({ key: 'id', direction: 'ASC' })
 
   const columnHelper = createColumnHelper<DataObjectTable>()
   const columns = [
     columnHelper.accessor('type', {
       header: t('gdpr-extractor.data-objects.table.field.type'),
-      size: 80
+      meta: {
+        type: 'element-subtype-icon',
+        config: {
+          elementType: elementTypes.dataObject
+        }
+      },
+      size: 60
     }),
     columnHelper.accessor('id', {
       header: t('gdpr-extractor.data-objects.table.field.id'),
@@ -76,20 +85,33 @@ export const DataObjectsTab = ({ data, providerKey, ...props }: DataObjectsTabPr
         return (
           <Flex>
             <ExportButton
+              data-testid={ `gdpr-data-objects-export-${data.id}` }
               id={ data.id }
               providerKey={ providerKey }
+              tooltip={ {
+                title: t('gdpr-extractor.data-objects.table.actions.export')
+              } }
             />
 
             <OpenButton
+              data-testid={ `gdpr-data-objects-open-${data.id}` }
               elementType={ elementTypes.dataObject }
               id={ data.id }
+              tooltip={ {
+                title: t('gdpr-extractor.data-objects.table.actions.open')
+              } }
             />
 
             <DeleteButton
+              data-testid={ `gdpr-data-objects-delete-${data.id}` }
               disabled={ !data.__gdprIsDeletable }
               elementType={ elementTypes.dataObject }
               id={ data.id }
               label={ data.fullPath }
+              providerKey={ providerKey }
+              tooltip={ {
+                title: t('gdpr-extractor.data-objects.table.actions.delete')
+              } }
             />
           </Flex>
         )
@@ -102,7 +124,14 @@ export const DataObjectsTab = ({ data, providerKey, ...props }: DataObjectsTabPr
       autoWidth
       columns={ columns }
       data={ data.map((item) => item.data) }
+      dataTestId="gdpr-data-objects-grid"
       enableSorting
+      onSortingChange={ (sorting) => {
+        const newSorting = transformToSortingState(sorting)!
+        setSortFilter(newSorting)
+        onSortingChange?.(newSorting)
+      } }
+      sorting={ transformToSortFilter(sortFilter) }
       { ...props }
     />
   )

@@ -129,6 +129,7 @@ export default defineConfig({
       './api/workflow': './js/src/sdk/api/workflow/index.ts',
       './api/reports': './js/src/sdk/api/reports/index.ts',
       './modules/app': './js/src/sdk/modules/app/index.ts',
+      './modules/application-logger': './js/src/sdk/modules/application-logger/index.ts',
       './modules/asset': './js/src/sdk/modules/asset/index.ts',
       './modules/class-definitions': './js/src/sdk/modules/class-definitions/index.ts',
       './modules/data-object': './js/src/sdk/modules/data-object/index.ts',
@@ -138,6 +139,7 @@ export default defineConfig({
       './modules/auth': './js/src/sdk/modules/auth/index.ts',
       './modules/icon-library': './js/src/sdk/modules/icon-library/index.ts',
       './modules/reports': './js/src/sdk/modules/reports/index.ts',
+      './modules/rule-builder': './js/src/sdk/modules/rule-builder/index.ts',
       './modules/translations': './js/src/sdk/modules/translations/index.ts',
       './modules/user': './js/src/sdk/modules/user/index.ts',
       './modules/widget-editor': './js/src/sdk/modules/widget-editor/index.ts',
@@ -145,6 +147,8 @@ export default defineConfig({
       './modules/wysiwyg': './js/src/sdk/modules/wysiwyg/index.ts',
       './modules/notifications': './js/src/sdk/modules/notifications/index.ts',
       './modules/perspectives': './js/src/sdk/modules/perspectives/index.ts',
+      './modules/global-message-bus': './js/src/sdk/modules/global-message-bus/index.ts',
+      './modules/gdpr-data-extractor': './js/src/sdk/modules/gdpr-data-extractor/index.ts',
       './utils': './js/src/sdk/utils/index.ts',
       },
       dts: false,
@@ -167,7 +171,7 @@ export default defineConfig({
         },
         'inversify': {
           eager: true,
-          version: packages.dependencies.inversify
+          requiredVersion: packages.dependencies.inversify
         },
         'antd': {
           singleton: true,
@@ -187,7 +191,6 @@ export default defineConfig({
         '@uiw/react-codemirror': {
           singleton: true,
           eager: true,
-          version: packages.dependencies['@uiw/react-codemirror'],
           requiredVersion: packages.dependencies['@uiw/react-codemirror']
         }
       }

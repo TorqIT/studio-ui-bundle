@@ -10,15 +10,13 @@
 
 import React from 'react'
 import { useTranslation } from 'react-i18next'
+import { isUndefined } from 'lodash'
 import { Draggable } from '@Pimcore/components/drag-and-drop/draggable'
 import { type DragAndDropInfo } from '@Pimcore/components/drag-and-drop/droppable'
-import { Button } from '@Pimcore/components/button/button'
-import { Flex } from '@Pimcore/components/flex/flex'
-import { Text } from '@Pimcore/components/text/text'
-import { Icon } from '@Pimcore/components/icon/icon'
+import { GridButton } from '@Pimcore/components/grid-button/grid-button'
+import { Tooltip } from '@Pimcore/components/tooltip/tooltip'
 import { type AreablockTypeEntry } from '@Pimcore/modules/document/document-editor-slice'
 import { getAreablockTypeIcon } from '../../utils/icon-fallback'
-import { useStyles } from './draggable-areablock-type.styles'
 
 interface DraggableAreablockTypeProps {
   type: AreablockTypeEntry
@@ -30,7 +28,6 @@ export const DraggableAreablockType = ({
   globalIndex
 }: DraggableAreablockTypeProps): React.JSX.Element => {
   const { t } = useTranslation()
-  const { styles } = useStyles()
   const iconConfig = getAreablockTypeIcon(type.icon, globalIndex)
 
   const dragInfo: DragAndDropInfo = {
@@ -45,26 +42,12 @@ export const DraggableAreablockType = ({
 
   return (
     <Draggable info={ dragInfo }>
-      <Button
-        className={ styles.typeButton }
-        type="default"
-      >
-        <Flex
-          align="center"
-          justify="center"
-          vertical
-        >
-          <Icon
-            className={ styles.typeIcon }
-            options={ { width: 24, height: 24 } }
-            type={ iconConfig.type }
-            value={ iconConfig.value }
-          />
-          <Text className={ styles.typeName }>
-            {t(type.name)}
-          </Text>
-        </Flex>
-      </Button>
+      <Tooltip title={ isUndefined(type.description) ? undefined : t(type.description) }>
+        <GridButton
+          icon={ iconConfig }
+          label={ t(type.name) }
+        />
+      </Tooltip>
     </Draggable>
   )
 }

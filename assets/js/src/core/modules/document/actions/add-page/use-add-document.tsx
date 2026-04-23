@@ -24,9 +24,9 @@ import { useTranslation } from 'react-i18next'
 import { type ContextMenuActionName } from '@Pimcore/modules/element/actions'
 import { type DocType, useDocumentDocTypeListQuery, useDocumentAddMutation } from '../../document-api-slice.gen'
 import { App } from 'antd'
-import { Form } from '@Pimcore/components/form/form'
+import { Form, type formInstanceType } from '@Pimcore/components/form/form'
 import { Input } from '@Pimcore/components/input/input'
-import { type InputRef, type FormInstance } from 'antd'
+import { type InputRef } from 'antd'
 import { useDocumentHelper } from '../../hooks/use-document-helper'
 import { Spin } from '@Pimcore/components/spin/spin'
 import { useFormModal } from '@Pimcore/components/modal/form-modal/hooks/use-form-modal'
@@ -81,16 +81,17 @@ export const useAddDocument = (config: AddDocumentConfig): UseAddDocumentHookRet
       .filter(docType => docType.type === type) // Filter for a certain docType
       .sort((a, b) => a.name.localeCompare(b.name))
       .reduce<Record<string, DocType[]>>((acc, docType) => {
-      const groupName = isNil(docType.group) || isEmpty(docType.group) ? 'undefined' : docType.group
+        const groupName = isNil(docType.group) || isEmpty(docType.group) ? 'undefined' : docType.group
 
-      if (acc[groupName] === undefined) {
-        acc[groupName] = []
-      }
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+        if (acc[groupName] === undefined) {
+          acc[groupName] = []
+        }
 
-      acc[groupName].push(docType)
+        acc[groupName].push(docType)
 
-      return acc
-    }, {})
+        return acc
+      }, {})
 
     if (structuredDocumentTypes.undefined !== undefined) {
       documentHierarchy = structuredDocumentTypes.undefined.map(docType => getDocumentEntry(docType, node))
@@ -142,7 +143,7 @@ export const useAddDocument = (config: AddDocumentConfig): UseAddDocumentHookRet
   }
 
   // Full form component (3 inputs: title, navigationName, key)
-  const FullFormContent: React.FC<{ form: FormInstance<any>, firstInputRef: React.RefObject<InputRef>, buttonId: string }> = ({ form, firstInputRef, buttonId }) => {
+  const FullFormContent: React.FC<{ form: formInstanceType<any>, firstInputRef: React.RefObject<InputRef>, buttonId: string }> = ({ form, firstInputRef, buttonId }) => {
     const handleEnterPress = (): void => {
       // Click the OK button using the unique ID
       const okButton = document.getElementById(buttonId) as HTMLButtonElement
@@ -229,7 +230,7 @@ export const useAddDocument = (config: AddDocumentConfig): UseAddDocumentHookRet
 
       const buttonId = uuid()
 
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+       
       modal.confirm({
         icon: null,
         title: modalTitle,

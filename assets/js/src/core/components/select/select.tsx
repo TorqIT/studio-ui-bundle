@@ -10,7 +10,7 @@
 
 import React, { forwardRef, useRef, useImperativeHandle, useState } from 'react'
 import type { RefSelectProps } from 'antd/es/select'
-import { Checkbox, Flex, Select as AntdSelect, type SelectProps as AntdSelectProps } from 'antd'
+import { Checkbox, Flex, Select as AntdSelect, type SelectProps as AntdSelectProps, Skeleton } from 'antd'
 import cn from 'classnames'
 import { isString } from 'lodash'
 import { isEmptyValue } from '@Pimcore/utils/type-utils'
@@ -28,13 +28,30 @@ export type SelectTheme = 'default' | 'primary'
 export interface SelectProps extends AntdSelectProps {
   customArrowIcon?: string
   customIcon?: string
+  dataTestId?: string
   inherited?: boolean
   width?: number | keyof typeof sizeOptions
   minWidth?: number | keyof typeof sizeOptions
   theme?: SelectTheme
+  loadingSkeleton?: boolean
 }
 
-export const Select = forwardRef<RefSelectProps, SelectProps>(({ customIcon, customArrowIcon, mode, status, className, allowClear, inherited, value, width, minWidth, theme = 'default', ...antdSelectProps }, ref): React.JSX.Element => {
+export const Select = forwardRef<RefSelectProps, SelectProps>(({
+  customIcon,
+  customArrowIcon,
+  mode,
+  status,
+  className,
+  allowClear,
+  inherited,
+  value,
+  width,
+  minWidth,
+  theme = 'default',
+  loadingSkeleton = false,
+  dataTestId,
+  ...antdSelectProps
+}, ref): React.JSX.Element => {
   const { t } = useTranslation()
   const selectRef = useRef<RefSelectProps>(null)
   const fieldWidths = useFieldWidthOptional()
@@ -62,7 +79,49 @@ export const Select = forwardRef<RefSelectProps, SelectProps>(({ customIcon, cus
 
   const computedWidth = getComputedWidth()
 
-  const { styles } = useStyles({ width: computedWidth, theme })
+  let computedMinWidth: undefined | number
+
+  if (typeof minWidth === 'number') {
+    computedMinWidth = minWidth
+  }
+
+  if (typeof minWidth === 'string') {
+    computedMinWidth = sizeOptions[minWidth as keyof typeof sizeOptions]
+  }
+
+  const selectStyle = antdSelectProps.style
+  const skeletonWidth = computedWidth ?? selectStyle?.width ?? selectStyle?.maxWidth ?? '100%'
+  const skeletonMaxWidth = selectStyle?.maxWidth ?? '100%'
+  const skeletonMinWidth = computedMinWidth ?? selectStyle?.minWidth
+
+  const { styles } = useStyles({
+    width: computedWidth,
+    theme,
+    skeletonWidth,
+    skeletonMaxWidth,
+    skeletonMinWidth
+  })
+
+  // Show skeleton if loading
+  if (loadingSkeleton) {
+    // Map Select size to Skeleton size
+    const getSkeletonSize = (): 'small' | 'default' | 'large' => {
+      if (antdSelectProps.size === 'small') return 'small'
+      if (antdSelectProps.size === 'large') return 'large'
+      return 'default'
+    }
+
+    return (
+      <div
+        className={ cn(styles.skeletonLoading, className) }
+      >
+        <Skeleton.Input
+          active
+          size={ getSkeletonSize() }
+        />
+      </div>
+    )
+  }
 
   const withCustomIcon = !isEmptyValue(customIcon)
   const isStatusWarning = status === 'warning'
@@ -108,16 +167,6 @@ export const Select = forwardRef<RefSelectProps, SelectProps>(({ customIcon, cus
     return null
   }
 
-  let computedMinWidth: undefined | number
-
-  if (typeof minWidth === 'number') {
-    computedMinWidth = minWidth
-  }
-
-  if (typeof minWidth === 'string') {
-    computedMinWidth = sizeOptions[minWidth as keyof typeof sizeOptions]
-  }
-
   // Apply field width as default maxWidth, with optional explicit minWidth
   const computedStyle = {
     maxWidth: computedWidth,
@@ -126,13 +175,15 @@ export const Select = forwardRef<RefSelectProps, SelectProps>(({ customIcon, cus
   }
 
   return (
-    <div className={ selectContainerClassNames }>
-      {withCustomIcon && (
-        <Icon
-          className={ customIconClassNames }
-          value={ customIcon! }
-        />
-      )}
+    <div
+      className={ selectContainerClassNames }
+      data-testid={ dataTestId }
+    >      {withCustomIcon && (
+    <Icon
+      className={ customIconClassNames }
+      value={ customIcon! }
+    />
+    )}
       <AntdSelect
         allowClear={ allowClear }
         className={ selectClassNames }

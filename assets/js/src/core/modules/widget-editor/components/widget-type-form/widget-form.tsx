@@ -17,9 +17,9 @@ import { Toolbar } from '@Pimcore/components/toolbar/toolbar'
 import { Tooltip } from '@Pimcore/components/tooltip/tooltip'
 import { type ElementTreeWidget } from '@Pimcore/modules/perspectives/perspectives-slice.gen'
 import { isArray, isUndefined } from 'lodash'
-import React from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useWidgetEditorContext } from '../../context/hooks/use-widget-editor-context'
+import { useWidgetEditorActions } from '../../context/hooks/use-widget-editor-context'
 import { useWidgetEditor } from '../../hooks/use-widget-editor'
 import { GeneralTab } from './components/general-tab/general-tab'
 import { useWidgetFormContext } from './context/hooks/use-widget-form-context'
@@ -42,25 +42,31 @@ const convertClassesArrayToObject = (classes: object | undefined): Record<string
 export const WidgetForm = ({ form: TypeSpecificForm }: WidgetFormProps): React.JSX.Element => {
   const { t } = useTranslation()
   const { form, widget } = useWidgetFormContext()
-  const { setWidgets, closeWidget } = useWidgetEditorContext()
+  const { setWidgets, closeWidget } = useWidgetEditorActions()
   const { removeWithConfirmation, updateWidget, getWidgetById, isLoading } = useWidgetEditor()
   const isWriteable = widget.isWriteable !== false
 
   const elementTreeWidget = widget as ElementTreeWidget
 
+  const onFinish = useCallback(async (values: any): Promise<void> => {
+    await updateWidget(widget.id, widget.widgetType, values)
+  }, [widget.id, widget.widgetType, updateWidget])
+
+  const initialValues = useMemo(() => ({
+    ...elementTreeWidget,
+    classes: convertClassesArrayToObject(elementTreeWidget.classes)
+  }), [elementTreeWidget])
+
+  const formProps = useMemo(() => ({
+    form,
+    layout: 'vertical' as const,
+    initialValues,
+    onFinish
+  }), [form, initialValues, onFinish])
+
   return (
     <FormKit
-      formProps={ {
-        form,
-        layout: 'vertical',
-        initialValues: {
-          ...elementTreeWidget,
-          classes: convertClassesArrayToObject(elementTreeWidget.classes)
-        },
-        onFinish: async (values: any) => {
-          await updateWidget(widget.id, widget.widgetType, values)
-        }
-      } }
+      formProps={ formProps }
     >
       <Flex
         className='absolute-stretch'
@@ -81,6 +87,7 @@ export const WidgetForm = ({ form: TypeSpecificForm }: WidgetFormProps): React.J
         <Toolbar justify="space-between">
           <div>
             <IconButton
+              data-testid="widget-form-refresh-button"
               disabled={ isLoading }
               icon={ { value: 'refresh' } }
               onClick={ async () => {
@@ -100,6 +107,7 @@ export const WidgetForm = ({ form: TypeSpecificForm }: WidgetFormProps): React.J
 
             <Tooltip title={ isWriteable ? '' : t('config_not_writeable') }>
               <IconButton
+                data-testid="widget-form-delete-button"
                 disabled={ isLoading || !isWriteable }
                 icon={ { value: 'trash' } }
                 onClick={ () => {
@@ -115,6 +123,7 @@ export const WidgetForm = ({ form: TypeSpecificForm }: WidgetFormProps): React.J
 
           <Tooltip title={ isWriteable ? '' : t('config_not_writeable') }>
             <Button
+              data-testid="widget-form-save-button"
               disabled={ !isWriteable }
               htmlType='submit'
               loading={ isLoading }

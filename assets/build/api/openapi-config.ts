@@ -108,6 +108,30 @@ const config: ConfigFile = {
     {
       pattern: 'gdprSearchData',
       type: 'query'
+    },
+    {
+      pattern: 'classificationStoreConfigurationCollectionCollection',
+      type: 'query'
+    },
+    {
+      pattern: 'classificationStoreConfigurationGroupCollection',
+      type: 'query'
+    },
+    {
+      pattern: 'classificationStoreConfigurationKeyCollection',
+      type: 'query'
+    },
+    {
+      pattern: 'classificationStoreConfigurationKeyGroupRelationCollection',
+      type: 'query'
+    },
+    {
+      pattern: 'classificationStoreConfigurationCollectionRelationCollection',
+      type: 'query'
+    },
+    {
+      pattern: 'unitQuantityValueUnitsCollection',
+      type: 'query'
     }
   ],
   outputFiles: {
@@ -160,7 +184,7 @@ const config: ConfigFile = {
       filterEndpoints: pathMatcher(/api\/metadata|api\/assets\/\{id\}\/custom-metadata/i)
     },
     '../../js/src/core/modules/app/settings/settings-slice.gen.ts': {
-      filterEndpoints: pathMatcher(/api\/settings/i)
+      filterEndpoints: pathMatcher(/api\/settings?/i)
     },
     '../../js/src/core/modules/app/mercure-api-slice.gen.ts': {
       filterEndpoints: pathMatcher(/api\/mercure/i)
@@ -169,7 +193,7 @@ const config: ConfigFile = {
       filterEndpoints: pathMatcher(/api\/thumbnails/i)
     },
     '../../js/src/core/modules/auth/authorization-api-slice.gen.ts': {
-      filterEndpoints: pathMatcher(/(login|logout)/i)
+      filterEndpoints: pathMatcher(/\/api\/(login|logout)/i)
     },
     '../../js/src/core/modules/class-definition/class-definition-slice.gen.ts': {
       filterEndpoints: pathMatcher(/api\/class\//i)

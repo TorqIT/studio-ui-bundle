@@ -204,6 +204,16 @@ const injectedRtkApi = api
                 query: () => ({ url: `/pimcore-studio/api/assets/grid/configurations` }),
                 providesTags: ["Asset Grid"],
             }),
+            assetRemoveGridConfigurationAsFavorite: build.mutation<
+                AssetRemoveGridConfigurationAsFavoriteApiResponse,
+                AssetRemoveGridConfigurationAsFavoriteApiArg
+            >({
+                query: (queryArg) => ({
+                    url: `/pimcore-studio/api/assets/grid/configuration/remove-favorite/${queryArg.configurationId}/${queryArg.folderId}`,
+                    method: "DELETE",
+                }),
+                invalidatesTags: ["Asset Grid"],
+            }),
             assetSaveGridConfiguration: build.mutation<
                 AssetSaveGridConfigurationApiResponse,
                 AssetSaveGridConfigurationApiArg
@@ -335,7 +345,7 @@ const injectedRtkApi = api
             }),
             assetPatchFolderById: build.mutation<AssetPatchFolderByIdApiResponse, AssetPatchFolderByIdApiArg>({
                 query: (queryArg) => ({
-                    url: `/pimcore-studio/api/assets/folder`,
+                    url: `/pimcore-studio/api/assets/folder/${queryArg.id}`,
                     method: "PATCH",
                     body: queryArg.body,
                 }),
@@ -675,6 +685,13 @@ export type AssetGetSavedGridConfigurationsApiResponse =
         items: GridConfiguration[];
     };
 export type AssetGetSavedGridConfigurationsApiArg = void;
+export type AssetRemoveGridConfigurationAsFavoriteApiResponse = unknown;
+export type AssetRemoveGridConfigurationAsFavoriteApiArg = {
+    /** ConfigurationId of the configurationId */
+    configurationId: number;
+    /** FolderId of the folderId */
+    folderId: number;
+};
 export type AssetSaveGridConfigurationApiResponse =
     /** status 200 Asset grid configuration saved successfully */ GridConfiguration;
 export type AssetSaveGridConfigurationApiArg = {
@@ -859,15 +876,15 @@ export type AssetPatchFolderByIdApiResponse =
         jobRunId: number;
     };
 export type AssetPatchFolderByIdApiArg = {
+    /** Id of the folder */
+    id: number;
     body: {
         data: {
-            /** Folder ID */
-            folderId: number;
             parentId?: number | null;
             key?: string | null;
             locked?: string | null;
             metadata?: PatchCustomMetadata[] | null;
-        }[];
+        };
         filters?: ExportAllFilter;
     };
 };
@@ -1116,16 +1133,10 @@ export type Asset = Element & {
     permissions: AssetPermissions;
 };
 export type Image = Asset & {
-    /** Format */
-    format: string;
     /** width */
     width: number;
     /** height */
     height: number;
-    /** is vector graphic */
-    isVectorGraphic: boolean;
-    /** is animated */
-    isAnimated: boolean;
     /** path to thumbnail */
     imageThumbnailPath: string;
 };
@@ -1399,6 +1410,7 @@ export const {
     useAssetGetAvailableGridColumnsQuery,
     useAssetGetGridConfigurationByFolderIdQuery,
     useAssetGetSavedGridConfigurationsQuery,
+    useAssetRemoveGridConfigurationAsFavoriteMutation,
     useAssetSaveGridConfigurationMutation,
     useAssetSetGridConfigurationAsFavoriteMutation,
     useAssetUpdateGridConfigurationMutation,

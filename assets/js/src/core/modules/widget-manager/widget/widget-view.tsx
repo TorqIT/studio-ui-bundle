@@ -11,7 +11,7 @@
 import React, { type ComponentType } from 'react'
 import { useStyles } from './widget-view.styles'
 import { useCssContainer, type UseCssContainerProps } from '@Pimcore/utils/hooks/use-css-container/use-css-container'
-import { type ElementIcon } from '@Pimcore/modules/asset/asset-api-slice.gen'
+import { type ElementIcon } from '@sdk/components'
 import { type TabNode } from 'flexlayout-react'
 import { type WidgetContentTitleContainerProps, WidgetContentTitleContainer } from './widget-content-title-container'
 import { type IconColorGroup } from '@Pimcore/components/icon/icon-color-groups-registry'
@@ -35,7 +35,16 @@ export const WIDGET_CONTENT_CLASS = 'widget__content'
 const WidgetView = (props: WidgetViewProps): React.JSX.Element => {
   const { styleDefinition } = useCssContainer(cssContainerWidget)
   const { styles } = useStyles()
-  const { title, showTitle, icon, node, contentTitleComponent, children, iconColorGroup } = props
+  const {
+    title,
+    showTitle,
+    icon,
+    node,
+    contentTitleComponent,
+    children,
+    iconColorGroup
+  } = props
+  const componentName = node.getComponent()
 
   return (
     <div className={ ['widget', styles.Widget, styleDefinition.styles.container].join(' ') }>
@@ -49,7 +58,10 @@ const WidgetView = (props: WidgetViewProps): React.JSX.Element => {
         />
       )}
 
-      <div className={ WIDGET_CONTENT_CLASS }>
+      <div
+        className={ WIDGET_CONTENT_CLASS }
+        data-testid={ `widget-content-${componentName ?? 'unknown'}` }
+      >
         {children}
       </div>
     </div>

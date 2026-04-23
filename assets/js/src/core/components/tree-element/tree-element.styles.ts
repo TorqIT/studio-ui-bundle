@@ -13,12 +13,15 @@ import { createStyles } from 'antd-style'
 interface IStylesProps {
   isHideRootChecker?: boolean
   hasRoot?: boolean
+  hideExpanders?: boolean
 }
 
 export const useStyles = createStyles(({ token, css }, props: IStylesProps) => {
   return {
     treeContainer: css`
       .ant-tree-list-holder-inner {
+        min-width: fit-content;
+
         & > .ant-tree-treenode {
           .ant-tree-switcher {
             width: ${props.hasRoot === true ? '24px' : '0'};
@@ -37,7 +40,12 @@ export const useStyles = createStyles(({ token, css }, props: IStylesProps) => {
         }
 
         .ant-tree-node--has-drag-and-drop {
+          height: 24px;
+
           .ant-tree-iconEle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             min-width: 24px;
           }
 
@@ -68,7 +76,7 @@ export const useStyles = createStyles(({ token, css }, props: IStylesProps) => {
           &::before {
             content: '';
             position: absolute;
-            top: -1px;
+            top: -3px;
             left: -48px;
             right: 0;
             height: 2px;
@@ -78,7 +86,7 @@ export const useStyles = createStyles(({ token, css }, props: IStylesProps) => {
           &::after {
             content: '';
             position: absolute;
-            top: -4px;
+            top: -6px;
             left: -49px;
             border-radius: 50%;
             width: 7px;
@@ -91,7 +99,7 @@ export const useStyles = createStyles(({ token, css }, props: IStylesProps) => {
           &::before {
             content: '';
             position: absolute;
-            bottom: -2px;
+            bottom: -4px;
             left: -48px;
             right: 0;
             height: 2px;
@@ -103,7 +111,7 @@ export const useStyles = createStyles(({ token, css }, props: IStylesProps) => {
             position: absolute;
             top: auto;
             right: auto;
-            bottom: -4px;
+            bottom: -6px;
             left: -49px;
             border-radius: 50%;
             width: 7px;
@@ -127,6 +135,7 @@ export const useStyles = createStyles(({ token, css }, props: IStylesProps) => {
         }
 
         .ant-tree-treenode {
+          white-space: nowrap;
           padding: 0 ${token.paddingXS}px;
           position: relative;
           margin-bottom: 0;
@@ -149,6 +158,10 @@ export const useStyles = createStyles(({ token, css }, props: IStylesProps) => {
             &:hover {
               background: none;
             }
+          }
+
+          &::before {
+            display: none;
           }
         }
 
@@ -232,6 +245,8 @@ export const useStyles = createStyles(({ token, css }, props: IStylesProps) => {
         position: relative;
         top: 1px;
       }
+
+      ${props.hideExpanders === true ? '.ant-tree-switcher { display: none !important; width: 0 !important; }' : ''}
     `,
     noRoot: css`
       .ant-tree {

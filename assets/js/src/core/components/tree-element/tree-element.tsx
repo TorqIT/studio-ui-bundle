@@ -21,6 +21,8 @@ export interface TreeAction {
   icon: string
   iconColorGroup?: IconColorGroup
   actions?: TreeAction[]
+  translationKey?: string
+  menuKey?: string
 }
 
 export interface TreeDataItem extends TreeDataNode {
@@ -51,6 +53,7 @@ export interface ITreeElementProps extends Omit<TreeProps, 'titleRender'> {
   isHideRootChecker?: boolean
   defaultExpandAll?: boolean
   hasRoot?: boolean
+  hideExpanders?: boolean
   titleRender?: ExtendedTitleRender
 }
 
@@ -73,10 +76,11 @@ const TreeElement = (props: ITreeElementProps): React.JSX.Element => {
     withCustomSwitcherIcon,
     isHideRootChecker = true,
     hasRoot = true,
+    hideExpanders,
     titleRender
   } = props
 
-  const { styles } = useStyles({ isHideRootChecker, hasRoot })
+  const { styles } = useStyles({ isHideRootChecker, hasRoot, hideExpanders })
 
   const [selectedKeys, setSelectedKeys] = useState<Key[]>([])
   const [expandedKeys, setExpandedKeys] = useState<Key[]>(defaultExpandedKeys ?? [0])
@@ -88,6 +92,7 @@ const TreeElement = (props: ITreeElementProps): React.JSX.Element => {
   }, [propSelectedKeys])
 
   const handleCustomSwitcherIcon = (): React.JSX.Element | undefined => {
+    if (hideExpanders === true) return undefined
     if (withCustomSwitcherIcon === false) return undefined
 
     return (

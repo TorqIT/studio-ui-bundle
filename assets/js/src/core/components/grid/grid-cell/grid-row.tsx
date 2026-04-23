@@ -20,6 +20,7 @@ import { type GridCellReference } from '@Pimcore/components/grid/grid'
 import { IconButton } from '@Pimcore/components/icon-button/icon-button'
 import { Flex } from '@Pimcore/components/flex/flex'
 import { createTableRowTestId } from '@Pimcore/utils/test-id-generator'
+import { type VirtualItem } from '@tanstack/react-virtual'
 
 export interface GridRowProps {
   row: Row<any>
@@ -31,14 +32,18 @@ export interface GridRowProps {
   onFocusCell?: (cell: GridCellReference) => void
   contextMenu?: ListGridContextMenuComponents
   onRowDoubleClick?: GridProps['onRowDoubleClick']
-  enableRowDrag?: boolean
+  enableRowVirtualizer: boolean
+  enableColumnVirtualizer: boolean
   size?: GridProps['size']
   rowStyle?: CSSProperties
   measureElement?: (node: HTMLElement | null) => void
   virtualIndex?: number
+  virtualColumns?: VirtualItem[]
+  virtualPaddingLeft?: number
+  virtualPaddingRight?: number
 }
 
-const GridRow = ({ row, isSelected, modifiedCells, enableRowDrag, rowStyle, ...props }: GridRowProps): React.JSX.Element => {
+const GridRow = ({ row, isSelected, modifiedCells, rowStyle, virtualColumns, virtualPaddingLeft, virtualPaddingRight, enableColumnVirtualizer, enableRowVirtualizer, ...props }: GridRowProps): React.JSX.Element => {
   const { setNodeRef, transform, transition, isDragging, attributes, listeners } = useSortable({
     id: row.id
   })
@@ -104,6 +109,10 @@ const GridRow = ({ row, isSelected, modifiedCells, enableRowDrag, rowStyle, ...p
     }
   }
 
+  const visibleCells = useMemo(() => {
+    return enableColumnVirtualizer ? virtualColumns?.map((virtualColumn) => row.getVisibleCells()[virtualColumn.index]) : row.getVisibleCells()
+  }, [enableColumnVirtualizer, virtualColumns, JSON.stringify(row)])
+
   return useMemo(() => renderWithContextMenu(
     <tr
       className={ [
@@ -115,40 +124,56 @@ const GridRow = ({ row, isSelected, modifiedCells, enableRowDrag, rowStyle, ...p
       data-testid={ createTableRowTestId(row.index) }
       onDoubleClick={ onRowDoubleClick }
       ref={ combinedRef }
-      style={ style }
+      style={
+        enableColumnVirtualizer
+          ? {
+              ...style,
+              paddingLeft: virtualPaddingLeft,
+              paddingRight: virtualPaddingRight
+            }
+          : { ...style }
+      }
     >
-      {row.getVisibleCells().map((cell, index) => (
-        <td
-          className='ant-table-cell'
-          key={ cell.id }
-          style={ cell.column.columnDef.meta?.autoWidth === true
-            ? {
-                width: 'auto',
-                minWidth: cell.column.getSize()
-              }
-            : {
-                width: cell.column.getSize(),
-                maxWidth: cell.column.getSize()
-              }
-                }
-        >
-          {enableRowDrag === true && index === 0
-            ? renderRowReorderButton()
-            : (
-              <GridCell
-                cell={ cell }
-                isActive={ props.activeColumId === cell.column.id }
-                isModified={ isModifiedCell(cell.column.id) }
-                onFocusCell={ props.onFocusCell }
-                rowIndex={ row.index }
-                size={ props.size }
-                tableElement={ props.tableElement }
-              />
-              )}
-        </td>
-      ))}
+      {visibleCells?.map((cell) => {
+        const isAutoWidth = cell.column.columnDef.meta?.autoWidth === true
+        const columnSize = cell.column.getSize()
+
+        const tdStyle: CSSProperties = isAutoWidth
+          ? {
+              width: 'auto',
+              minWidth: columnSize,
+              ...(enableRowVirtualizer ? { flexShrink: 1, flexGrow: 1 } : {})
+            }
+          : {
+              width: columnSize,
+              maxWidth: columnSize,
+              ...(enableRowVirtualizer ? { flexShrink: 0 } : {})
+            }
+
+        return (
+          <td
+            className='ant-table-cell'
+            key={ cell.id }
+            style={ tdStyle }
+          >
+            {cell.column.id === 'drag-handle'
+              ? renderRowReorderButton()
+              : (
+                <GridCell
+                  cell={ cell }
+                  isActive={ props.activeColumId === cell.column.id }
+                  isModified={ isModifiedCell(cell.column.id) }
+                  onFocusCell={ props.onFocusCell }
+                  rowIndex={ row.index }
+                  size={ props.size }
+                  tableElement={ props.tableElement }
+                />
+                )}
+          </td>
+        )
+      })}
     </tr>
-  ), [JSON.stringify(row), memoModifiedCells, isSelected, props.columns, style])
+  ), [JSON.stringify(row), memoModifiedCells, isSelected, props.columns, style, visibleCells])
 
   function isModifiedCell (cellId: string): boolean {
     return memoModifiedCells.find((item) => item.columnId === cellId) !== undefined

@@ -38,6 +38,7 @@ import { type DynamicTypeGridCellOpenElement } from './definitions/grid-cell/typ
 import { type DynamicTypeGridCellAssetPreview } from './definitions/grid-cell/types/asset-preview/dynamic-type-grid-cell-asset-preview'
 import { type DynamicTypeGridCellAssetActions } from './definitions/grid-cell/types/asset-actions/dynamic-type-grid-cell-asset-preview'
 import { type DynamicTypeGridCellDependencyTypeIcon } from './definitions/grid-cell/types/_dependencies/dynamic-type-grid-cell-dependency-type-icon'
+import { type DynamicTypeGridCellElementSubtypeIcon } from './definitions/grid-cell/types/element-subtype-icon/dynamic-type-grid-cell-element-subtype-icon'
 import { type DynamicTypeGridCellAssetCustomMetadataIcon } from './definitions/grid-cell/types/_meta-data/dynamic-type-grid-cell-asset-custom-metadata-icon'
 import { type DynamicTypeGridCellAssetCustomMetadataValue } from './definitions/grid-cell/types/_meta-data/dynamic-type-grid-cell-asset-custom-metadata-value'
 import { type DynamicTypeGridCellPropertyIcon } from './definitions/grid-cell/types/_properties/dynamic-type-grid-cell-property-icon'
@@ -221,6 +222,7 @@ import { type DynamicTypeFieldFilterQuantityValue } from '@Pimcore/modules/eleme
 import { type DynamicTypeFieldFilterColor } from '@Pimcore/modules/element/dynamic-types/definitions/field-filters/types/color/dynamic-type-field-filter-color'
 import { type DynamicTypeFieldFilterDatetime } from '@Pimcore/modules/element/dynamic-types/definitions/field-filters/types/datetime/dynamic-type-field-filter-datetime'
 import { type DynamicTypeFieldFilterTime } from '@Pimcore/modules/element/dynamic-types/definitions/field-filters/types/time/dynamic-type-field-filter-time'
+import { type DynamicTypeFieldFilterRelation } from '@Pimcore/modules/element/dynamic-types/definitions/field-filters/types/relation/dynamic-type-field-filter-relation'
 import { type DynamicTypeObjectLayoutIframe } from '@Pimcore/modules/element/dynamic-types/definitions/objects/layout-related/types/dynamic-type-object-layout-iframe'
 
 moduleSystem.registerModule({
@@ -244,6 +246,7 @@ moduleSystem.registerModule({
     fieldFilterRegistry.registerDynamicType(container.get<DynamicTypeFieldFilterColor>(serviceIds['DynamicTypes/FieldFilter/Color']))
     fieldFilterRegistry.registerDynamicType(container.get<DynamicTypeFieldFilterDatetime>(serviceIds['DynamicTypes/FieldFilter/Datetime']))
     fieldFilterRegistry.registerDynamicType(container.get<DynamicTypeFieldFilterTime>(serviceIds['DynamicTypes/FieldFilter/Time']))
+    fieldFilterRegistry.registerDynamicType(container.get<DynamicTypeFieldFilterRelation>(serviceIds['DynamicTypes/FieldFilter/Relation']))
 
     const batchEditRegistry = container.get<DynamicTypeBatchEditRegistry>(serviceIds['DynamicTypes/BatchEditRegistry'])
 
@@ -282,6 +285,7 @@ moduleSystem.registerModule({
     GridCellRegistry.registerDynamicType(container.get<DynamicTypeGridCellAssetActions>(serviceIds['DynamicTypes/GridCell/AssetActions']))
     GridCellRegistry.registerDynamicType(container.get<DynamicTypeGridCellDataObjectActions>(serviceIds['DynamicTypes/GridCell/DataObjectActions']))
     GridCellRegistry.registerDynamicType(container.get<DynamicTypeGridCellDependencyTypeIcon>(serviceIds['DynamicTypes/GridCell/DependencyTypeIcon']))
+    GridCellRegistry.registerDynamicType(container.get<DynamicTypeGridCellElementSubtypeIcon>(serviceIds['DynamicTypes/GridCell/ElementSubtypeIcon']))
     GridCellRegistry.registerDynamicType(container.get<DynamicTypeGridCellAssetCustomMetadataIcon>(serviceIds['DynamicTypes/GridCell/AssetCustomMetadataIcon']))
     GridCellRegistry.registerDynamicType(container.get<DynamicTypeGridCellAssetCustomMetadataValue>(serviceIds['DynamicTypes/GridCell/AssetCustomMetadataValue']))
     GridCellRegistry.registerDynamicType(container.get<DynamicTypeGridCellPropertyIcon>(serviceIds['DynamicTypes/GridCell/PropertyIcon']))

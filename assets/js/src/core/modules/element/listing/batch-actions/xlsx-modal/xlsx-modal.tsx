@@ -8,7 +8,7 @@
  *  @license    Pimcore Open Core License (POCL)
  */
 
-import { Alert, Modal, Space, Form } from 'antd'
+import { Alert, Modal, Space } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { CreateXLSXForm, type XLSXFormValues } from './create-xlsx-form/create-xlsx-form'
 import { DownloadJob } from '@Pimcore/modules/execution-engine/jobs/download/download-job'
@@ -26,6 +26,7 @@ import { getPrefix } from '@Pimcore/app/api/pimcore/route'
 import { isNil } from 'lodash'
 import { useExecutionEngine } from '@Pimcore/modules/execution-engine/hooks/use-execution-engine'
 import { type GridColumnRequest } from '@sdk/api/data-object'
+import { Form } from '@sdk/components'
 
 export interface XlsxModalProps {
   open: boolean
@@ -111,7 +112,8 @@ export const XlsxModal = (props: XlsxModalProps): React.JSX.Element => {
     const job = new DownloadJob({
       title: t('jobs.xlsx-job.title', { title: jobTitle }),
       downloadUrl: `${getPrefix()}/export/download/xlsx/{jobRunId}`,
-      action: async () => await getDownloadAction(values.header)
+      action: async () => await getDownloadAction(values.header),
+      ...(numberedSelectedRows.length === 0 && { hasChildJob: true })
     })
     void executionEngine.runJob(job)
 
@@ -145,8 +147,8 @@ export const XlsxModal = (props: XlsxModalProps): React.JSX.Element => {
       }
 
       const promise = fetchCreateFolderXlsx({
+        id,
         body: {
-          folders: [id],
           elementType,
           columns: extractedColumnsFromColumnArg,
           config: {
@@ -170,7 +172,8 @@ export const XlsxModal = (props: XlsxModalProps): React.JSX.Element => {
           columns: extractedColumnsFromColumnArg,
           config: {
             header
-          }
+          },
+          ...(!isNil(selectedClassDefinition?.id) && { classId: selectedClassDefinition.id })
         }
       })
 
