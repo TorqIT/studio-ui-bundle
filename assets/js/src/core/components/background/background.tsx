@@ -34,7 +34,7 @@ const Background = ({ phase = 'idle' }: BackgroundProps): React.JSX.Element => {
       const preloader = document.getElementById('app-preloader')
       if (preloader !== null) {
         preloader.classList.add('app-preloader--fading')
-        const fallback = setTimeout(() => preloader.remove(), 600)
+        const fallback = setTimeout(() => { preloader.remove() }, 600)
         preloader.addEventListener('transitionend', (e: TransitionEvent) => {
           if (e.target === preloader && e.propertyName === 'opacity') {
             clearTimeout(fallback)
@@ -53,9 +53,9 @@ const Background = ({ phase = 'idle' }: BackgroundProps): React.JSX.Element => {
       <div className='background-figure background-figure--bottom-left'></div>
       <div className='background-figure background-figure--bottom-right'></div>
       <div className='background-figure background-figure--top-left'></div>
-      {phase === 'loading' && <div className={styles.logoOrbitCW}/>}
-      {phase === 'loading' && <div className={styles.logoOrbitCCW}/>}
-      {phase === 'loading' && <div className={styles.backdropBlur}/>}
+      {phase === 'loading' && <div className={ styles.logoOrbitCW } />}
+      {phase === 'loading' && <div className={ styles.logoOrbitCCW } />}
+      {phase === 'loading' && <div className={ styles.backdropBlur } />}
       <img
         alt="Logo"
         className={ styles.logoImage }
