@@ -192,7 +192,6 @@ export type ExportXlsxApiArg = {
                 | "string"
                 | "bool"
                 | "items_to_restore";
-            sheetName?: string;
         };
         elementType?: "data-object" | "object" | "asset" | "document";
         classId?: string | null;
@@ -235,7 +234,6 @@ export type ExportXlsxFolderApiArg = {
                 | "string"
                 | "bool"
                 | "items_to_restore";
-            sheetName?: string;
         };
         elementType?: "data-object" | "object" | "asset" | "document";
         classId?: string | null;
