@@ -37,7 +37,7 @@ export const FocalPoint = ({ zoom, imageSrc }: FocalPointProps): React.JSX.Eleme
   const { id } = useContext(AssetContext)
   const focalPointContext = useContext(FocalPointContext)
 
-  const { isLoading, imageSettings, addImageSettings, removeImageSetting } = useAssetDraft(id)
+  const { isLoading, imageSettings, addImageSettings, removeImageSetting, asset, customMetadata } = useAssetDraft(id)
   const { styles } = useStyles()
 
   if (isUndefined(focalPointContext)) {
@@ -139,6 +139,10 @@ export const FocalPoint = ({ zoom, imageSrc }: FocalPointProps): React.JSX.Eleme
     }
   }, [])
 
+  const altText = (customMetadata?.find(m => m.name === 'alt')?.data as string | null | undefined)
+    ?? asset?.filename?.replace(/\.[^.]+$/, '')
+    ?? ''
+
   return (
     <div
       className={ styles.container }
@@ -148,7 +152,7 @@ export const FocalPoint = ({ zoom, imageSrc }: FocalPointProps): React.JSX.Eleme
       } }
     >
       <PimcoreImage
-        alt="car"
+        alt={ altText }
         onLoad={ handleOnLoad }
         src={ imageSrc }
         wrapperClassName={ styles.imageContainer }
