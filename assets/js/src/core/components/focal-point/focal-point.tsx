@@ -139,9 +139,9 @@ export const FocalPoint = ({ zoom, imageSrc }: FocalPointProps): React.JSX.Eleme
     }
   }, [])
 
-  const altText = (customMetadata?.find(m => m.name === 'alt')?.data as string | null | undefined)
-    ?? asset?.filename?.replace(/\.[^.]+$/, '')
-    ?? ''
+  const altText = (customMetadata?.find(m => m.name === 'alt')?.data as string | null | undefined) ??
+    asset?.filename?.replace(/\.[^.]+$/, '') ??
+    ''
 
   return (
     <div
