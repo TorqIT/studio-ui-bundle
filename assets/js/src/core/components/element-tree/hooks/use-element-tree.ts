@@ -9,7 +9,7 @@
  */
 
 import { store, useAppDispatch } from '@Pimcore/app/store'
-import { type InternalNodeState, selectNodeState, setNodeExpanded, setNodeLoading, setNodePage, setNodeSearchTerm, setSelectedNodeIds, setNodeScrollTo, updateNodesByParentId, setNodeFetching, setNodeHasChildren } from '../element-tree-slice'
+import { type InternalNodeState, type TreeNode, clearSelectedNodeIds, selectNodeState, selectSelectedNodeIds, selectSelectedNodes, setNodeExpanded, setNodeLoading, setNodePage, setNodeSearchTerm, setSelectedNodeIds, setNodeScrollTo, toggleSelectedNodeId, updateNodesByParentId, setNodeFetching, setNodeHasChildren } from '../element-tree-slice'
 import { isUndefined } from 'lodash'
 import { type DataTransformerReturnType, type DataTransformerSourceNode } from '../types/node-api-hook'
 import { useNodeApiHook } from '../provider/node-api-hook-provider/use-node-api-hook'
@@ -24,6 +24,10 @@ export interface UseElementTreeReturnType {
   setPage: (nodeId: string, page: number) => void
   setSearchTerm: (nodeId: string, searchTerm?: string) => void
   setSelectedIds: (selectedNodeIds: string[]) => void
+  toggleSelectedId: (nodeId: string) => void
+  clearSelectedIds: () => void
+  getSelectedIds: () => string[]
+  getSelectedNodes: () => TreeNode[]
   setScrollTo: (nodeId: string, scrollTo: boolean) => void
   refreshChildren: (nodeId: string, forceLoading: boolean) => void
 }
@@ -116,6 +120,24 @@ export const useElementTree = (): UseElementTreeReturnType => {
     dispatch(setSelectedNodeIds({ treeId, selectedNodeIds }))
   }
 
+  const toggleSelectedId = (nodeId: string): void => {
+    dispatch(toggleSelectedNodeId({ treeId, nodeId }))
+  }
+
+  const clearSelectedIds = (): void => {
+    dispatch(clearSelectedNodeIds({ treeId }))
+  }
+
+  // Non-subscribing reads: used from event handlers (click, dragstart) that need the
+  // current selection without re-rendering every node whenever the selection changes.
+  const getSelectedNodes = (): TreeNode[] => {
+    return selectSelectedNodes(store.getState(), treeId)
+  }
+
+  const getSelectedIds = (): string[] => {
+    return selectSelectedNodeIds(store.getState(), treeId)
+  }
+
   const setScrollTo = (nodeId: string, scrollTo: boolean): void => {
     dispatch(setNodeScrollTo({ treeId, nodeId, scrollTo }))
   }
@@ -133,6 +155,10 @@ export const useElementTree = (): UseElementTreeReturnType => {
     setPage,
     setSearchTerm,
     setSelectedIds,
+    toggleSelectedId,
+    clearSelectedIds,
+    getSelectedIds,
+    getSelectedNodes,
     setScrollTo,
     refreshChildren
   }

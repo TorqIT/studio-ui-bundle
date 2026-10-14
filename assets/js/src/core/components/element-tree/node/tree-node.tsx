@@ -17,6 +17,8 @@ import { TreeExpander } from '../expander/tree-expander'
 import { type ElementPermissions } from '@Pimcore/modules/element/element-api-slice-enhanced'
 import { type ElementIcon } from '@Pimcore/modules/asset/asset-api-slice.gen'
 import { useElementTreeNode } from '../hooks/use-element-tree-node'
+import { useTreeNodeSelection } from '../hooks/use-tree-node-selection'
+import { TREE_NODE_ID_ATTRIBUTE } from './tree-node-selection'
 import { isNil } from 'lodash'
 import { scrollToNodeElement } from '@Pimcore/modules/widget-manager/widget/utils/widget-content-scroll'
 import { createNodeTestId } from '@Pimcore/utils/test-id-generator'
@@ -97,13 +99,11 @@ const TreeNode = forwardRef(function ForwardedTreeNode ({
   const { styles } = useStyles()
   const {
     renderNodeContent: RenderNodeContent,
-    onSelect,
-    onRightClick,
     nodesRefs,
     nodeOrder,
     tooltipSlotName
   } = useContext(TreeContext)
-  const { isExpanded, setExpanded, isSelected, isScrollTo, setScrollTo, setSelectedIds } = useElementTreeNode(id)
+  const { isExpanded, setExpanded, isSelected, isScrollTo, setScrollTo } = useElementTreeNode(id)
   const treeNodeProps = { id, icon, label, internalKey, level, isLoading, isRoot, danger, ...props }
 
   useEffect(() => {
@@ -140,23 +140,7 @@ const TreeNode = forwardRef(function ForwardedTreeNode ({
     return classes.join(' ')
   }
 
-  function selectNode (): void {
-    setSelectedIds([id])
-
-    if (onSelect !== undefined) {
-      onSelect(treeNodeProps)
-    }
-  }
-
-  function onClick (event: MouseEvent): void {
-    selectNode()
-  }
-
-  function onContextMenu (event: MouseEvent): void {
-    if (onRightClick !== undefined) {
-      onRightClick(event, treeNodeProps)
-    }
-  }
+  const { selectNode, onClick, onContextMenu, onMouseDown } = useTreeNodeSelection({ id, isSelected, treeNodeProps })
 
   function onKeyDown (event: React.KeyboardEvent): void {
     if (event.key === 'Enter') {
@@ -221,11 +205,13 @@ const TreeNode = forwardRef(function ForwardedTreeNode ({
     <Flex
       align="center"
       className={ cn('tree-node__content-inner') }
+      { ...{ [TREE_NODE_ID_ATTRIBUTE]: id } }
       gap="small"
       justify="center"
       onClick={ onClick }
       onContextMenu={ onContextMenu }
       onKeyDown={ onKeyDown }
+      onMouseDown={ onMouseDown }
       ref={ setRef }
       role='button'
       style={

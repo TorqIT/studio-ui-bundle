@@ -16,7 +16,7 @@ import { type TreeLevelData } from '@Pimcore/modules/element/element-api-slice.g
 import { elementTypes } from '@Pimcore/types/enums/element/element-type'
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import { injectSliceWithState, type RootState } from '@sdk/app'
-import { camelCase, isEqual, isUndefined, merge } from 'lodash'
+import { camelCase, isEqual, isUndefined, merge, uniq } from 'lodash'
 import { createSelector } from 'reselect'
 
 export interface TreeNode {
@@ -65,6 +65,8 @@ type TreeNodesState = Record<string, InternalNodeState>
 
 interface TreeState {
   nodes: TreeNodesState
+  /** Ordered list of selected node ids; the per-node `isSelected` flags mirror it. */
+  selectedNodeIds: string[]
 }
 
 type TreesState = Record<string, TreeState>
@@ -81,7 +83,8 @@ export const initialNodeState: InternalNodeState = {
 }
 
 const initialTreeState: TreeState = {
-  nodes: {}
+  nodes: {},
+  selectedNodeIds: []
 }
 
 const initialState: TreesState = {}
@@ -182,22 +185,47 @@ const removeDescendants = (nodes: TreeNodesState, parentId: string, keepBasicSta
   return result
 }
 
+const getSelectedNodeIds = (state: TreesState, treeId: string): string[] => {
+  return state[treeId]?.selectedNodeIds ?? []
+}
+
+// Only nodes whose selection actually changes are touched, so a click in a large tree does not
+// rewrite (and re-render) every node.
 const updateSelectedNodeIds = (state: TreesState, treeId: string, selectedNodeIds: string[]): void => {
   if (isUndefined(state[treeId])) {
     state[treeId] = { ...initialTreeState }
   }
-  Object.keys(state[treeId].nodes).forEach(nodeId => {
-    updateNodeState(state, treeId, nodeId, node => ({
-      ...node,
-      isSelected: selectedNodeIds.includes(nodeId)
-    }))
-  })
-  selectedNodeIds.forEach(nodeId => {
+
+  const nextSelectedNodeIds = uniq(selectedNodeIds)
+  const previousSelectedNodeIds = getSelectedNodeIds(state, treeId)
+
+  previousSelectedNodeIds
+    .filter(nodeId => !nextSelectedNodeIds.includes(nodeId))
+    .forEach(nodeId => {
+      updateNodeState(state, treeId, nodeId, node => ({
+        ...node,
+        isSelected: false
+      }))
+    })
+
+  nextSelectedNodeIds.forEach(nodeId => {
     updateNodeState(state, treeId, nodeId, node => ({
       ...node,
       isSelected: true
     }))
   })
+
+  state[treeId].selectedNodeIds = nextSelectedNodeIds
+}
+
+// Drop ids of nodes that no longer exist in the tree (e.g. after a parent was refreshed).
+const pruneSelectedNodeIds = (state: TreesState, treeId: string): void => {
+  const selectedNodeIds = getSelectedNodeIds(state, treeId)
+  const existingSelectedNodeIds = selectedNodeIds.filter(nodeId => !isUndefined(state[treeId].nodes[nodeId]?.treeNodeProps))
+
+  if (existingSelectedNodeIds.length !== selectedNodeIds.length) {
+    state[treeId].selectedNodeIds = existingSelectedNodeIds
+  }
 }
 
 const slice = createSlice({
@@ -316,6 +344,26 @@ const slice = createSlice({
     ) => {
       updateSelectedNodeIds(state, payload.treeId, payload.selectedNodeIds)
     },
+    toggleSelectedNodeId: (
+      state,
+      { payload }: PayloadAction<{ treeId: string, nodeId: string }>
+    ) => {
+      const selectedNodeIds = getSelectedNodeIds(state, payload.treeId)
+
+      updateSelectedNodeIds(
+        state,
+        payload.treeId,
+        selectedNodeIds.includes(payload.nodeId)
+          ? selectedNodeIds.filter(nodeId => nodeId !== payload.nodeId)
+          : [...selectedNodeIds, payload.nodeId]
+      )
+    },
+    clearSelectedNodeIds: (
+      state,
+      { payload }: PayloadAction<{ treeId: string }>
+    ) => {
+      updateSelectedNodeIds(state, payload.treeId, [])
+    },
     setNodeScrollTo: (
       state,
       { payload }: PayloadAction<{ treeId: string, nodeId: string, scrollTo: boolean }>
@@ -353,6 +401,7 @@ const slice = createSlice({
       })
 
       state[payload.treeId].nodes = updatedNodes
+      pruneSelectedNodeIds(state, payload.treeId)
     },
     locateInTree: (
       state,
@@ -813,11 +862,35 @@ export const treeSliceName = slice.name
 
 injectSliceWithState(slice)
 
-export const { setNodeLoading, setNodeLoadingInAllTree, setNodeOpeningInAllTree, setNodeExpanded, setNodeHasChildren, setNodePage, setNodeSearchTerm, setSelectedNodeIds, setNodeScrollTo, updateNodesByParentId, locateInTree, setFetchTriggered, setRootFetchTriggered, setNodeFetching, setNodeFetchingInAllTrees, markNodeDeletingForTree, refreshNodeChildren, refreshTargetNode, refreshSourceNode, markNodeDeleting, renameNode, updateNodeData, updateNodeType, setNodePublished, setNodeAdditionalAttributes, setRootNode, setDocumentNodeSiteStatus, setNodeLocked, refreshTreeByElementType, setDocumentNodeNavigationExclude, setDocumentNodeStaticGeneratorEnabled } = slice.actions
+export const { setNodeLoading, setNodeLoadingInAllTree, setNodeOpeningInAllTree, setNodeExpanded, setNodeHasChildren, setNodePage, setNodeSearchTerm, setSelectedNodeIds, toggleSelectedNodeId, clearSelectedNodeIds, setNodeScrollTo, updateNodesByParentId, locateInTree, setFetchTriggered, setRootFetchTriggered, setNodeFetching, setNodeFetchingInAllTrees, markNodeDeletingForTree, refreshNodeChildren, refreshTargetNode, refreshSourceNode, markNodeDeleting, renameNode, updateNodeData, updateNodeType, setNodePublished, setNodeAdditionalAttributes, setRootNode, setDocumentNodeSiteStatus, setNodeLocked, refreshTreeByElementType, setDocumentNodeNavigationExclude, setDocumentNodeStaticGeneratorEnabled } = slice.actions
 
 export const selectNodeState = createSelector(
   (state: RootState) => state.trees,
   (state: RootState, treeId: string) => treeId,
   (state: RootState, treeId: string, nodeId: string) => nodeId,
   (trees, treeId, nodeId) => trees[treeId]?.nodes[nodeId]
+)
+
+const EMPTY_SELECTION: string[] = []
+
+/** Ids of the selected nodes of a tree, in selection order. Stable reference while unchanged. */
+export const selectSelectedNodeIds = createSelector(
+  (state: RootState) => state.trees,
+  (state: RootState, treeId: string) => treeId,
+  (trees, treeId): string[] => (trees[treeId] as TreeState | undefined)?.selectedNodeIds ?? EMPTY_SELECTION
+)
+
+/** The selected nodes of a tree, in selection order, for multi-select aware actions (context menu, drag & drop). */
+export const selectSelectedNodes = createSelector(
+  selectSelectedNodeIds,
+  (state: RootState, treeId: string) => (state.trees[treeId] as TreeState | undefined)?.nodes,
+  (selectedNodeIds, nodes): TreeNode[] => {
+    if (isUndefined(nodes)) {
+      return []
+    }
+
+    return selectedNodeIds
+      .map(nodeId => nodes[nodeId]?.treeNodeProps)
+      .filter((treeNode): treeNode is TreeNode => !isUndefined(treeNode))
+  }
 )

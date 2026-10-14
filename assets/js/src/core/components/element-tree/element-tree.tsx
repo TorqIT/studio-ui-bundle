@@ -69,6 +69,8 @@ export interface INodeRef {
 export interface ITreeContext extends TreeProps {
   nodesRefs?: MutableRefObject<Record<string, INodeRef>>
   nodeOrder?: () => string[]
+  /** Id of the node a Shift+Click range selection starts from (the last plain or Ctrl/Cmd click). */
+  selectionAnchor?: MutableRefObject<string | null>
 }
 
 export const defaultTreeProps: TreeProps = {
@@ -99,6 +101,7 @@ const ElementTree = (
   const { getChildren, isLoading } = useElementTreeNode(String(nodeId))
 
   const nodesRefs = useRef<Record<string, INodeRef>>({})
+  const selectionAnchor = useRef<string | null>(null)
   const nodeOrder = useCallback(() => {
     return Object.keys(nodesRefs.current).sort((a: string, b: string) => {
       const nodeA = nodesRefs.current[a].node
@@ -121,7 +124,7 @@ const ElementTree = (
     event.preventDefault()
   }
 
-  const treeContextValue: ITreeContext = useMemo(() => ({ ...props, nodesRefs, nodeOrder, renderNode, renderNodeContent, onRightClick }), [props, nodesRefs, nodeOrder, renderNode, renderNodeContent, onRightClick])
+  const treeContextValue: ITreeContext = useMemo(() => ({ ...props, nodesRefs, nodeOrder, selectionAnchor, renderNode, renderNodeContent, onRightClick }), [props, nodesRefs, nodeOrder, selectionAnchor, renderNode, renderNodeContent, onRightClick])
 
   const items: string[] = getChildren()
 
