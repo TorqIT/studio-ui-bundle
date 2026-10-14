@@ -17,6 +17,11 @@ import { getIframeOffset } from '@sdk/utils'
 interface DraggableProps {
   children: React.ReactNode
   info: DragAndDropInfo
+  /**
+   * Resolves the drag info lazily at drag start. Lets a node include the current multi-selection
+   * without subscribing every node to selection changes.
+   */
+  getInfo?: () => DragAndDropInfo
 }
 
 export class DragInfoChangeEvent extends CustomEvent<DragAndDropInfo | null> {
@@ -57,7 +62,7 @@ const getOrCreateOverlay = (): HTMLDivElement => {
   return overlay
 }
 
-function Draggable ({ children, info }: DraggableProps): React.JSX.Element {
+function Draggable ({ children, info: staticInfo, getInfo }: DraggableProps): React.JSX.Element {
   const updateOverlayPosition = useCallback((event: MouseEvent): void => {
     const overlay = document.getElementById('studio-dnd-overlay')
     if (isNull(overlay)) return
@@ -73,6 +78,7 @@ function Draggable ({ children, info }: DraggableProps): React.JSX.Element {
     e.stopPropagation()
     document.body.classList.add('dnd--dragging')
 
+    const info = getInfo?.() ?? staticInfo
     const ghost = getOrCreateGhostElement()
     e.dataTransfer.setDragImage(ghost, 0, 0)
 

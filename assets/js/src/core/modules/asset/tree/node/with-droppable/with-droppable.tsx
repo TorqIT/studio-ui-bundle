@@ -12,14 +12,15 @@ import { type TreeNode, type TreeNodeProps } from '@Pimcore/components/element-t
 import React, { forwardRef, type ReactElement, type Ref } from 'react'
 import { Droppable, type DroppableProps } from '@Pimcore/components/drag-and-drop/droppable'
 import { type Asset } from '../../../asset-api-slice-enhanced'
-import { useCopyPaste } from '@Pimcore/modules/element/actions/copy-paste/use-copy-paste'
+import { useBatchMove } from '@Pimcore/modules/element/actions/copy-paste/use-batch-move'
 import trackError, { GeneralError } from '@Pimcore/modules/app/error-handler'
 import { isUndefined } from 'lodash'
 import { useDndAllowed } from '@Pimcore/modules/element/tree/node/with-droppable/use-dnd-allowed'
+import { canDropSourcesOnTarget, getDragSources } from '@Pimcore/modules/element/tree/node/with-droppable/drop-validation'
 
 export const withDroppable = (Component: typeof TreeNode): typeof TreeNode => {
   const DroppableNodeContent = (props: TreeNodeProps, ref: Ref<HTMLDivElement>): ReactElement => {
-    const { move } = useCopyPaste('asset')
+    const { moveMany } = useBatchMove('asset')
     const { isSourceAllowed, isTargetAllowed } = useDndAllowed()
 
     if (props.metaData?.asset === undefined) {
@@ -40,17 +41,23 @@ export const withDroppable = (Component: typeof TreeNode): typeof TreeNode => {
       )
     }
 
-    const onDrop: DroppableProps['onDrop'] = (info) => {
-      const sourceAsset: Asset = info.data
+    // Every dragged asset has to be allowed, and none of them may be the target or one of its ancestors.
+    const canDrop = (sourceAssets: Asset[]): boolean => {
+      return sourceAssets.every((sourceAsset) => isSourceAllowed(sourceAsset)) && canDropSourcesOnTarget(sourceAssets, targetAsset)
+    }
 
-      if (!isSourceAllowed(sourceAsset) || !isAssetTargetAllowed(targetAsset)) {
+    const onDrop: DroppableProps['onDrop'] = (info) => {
+      const sourceAssets = getDragSources<Asset>(info)
+
+      if (!canDrop(sourceAssets) || !isAssetTargetAllowed(targetAsset)) {
         return
       }
-      move({
-        currentElement: { id: sourceAsset.id, parentId: sourceAsset.parentId },
+
+      moveMany({
+        currentElements: sourceAssets.map((sourceAsset) => ({ id: sourceAsset.id, parentId: sourceAsset.parentId })),
         targetElement: { id: targetAsset.id, parentId: targetAsset.parentId }
       }).catch(() => {
-        trackError(new GeneralError('Item could not be moved'))
+        trackError(new GeneralError('Items could not be moved'))
       })
     }
 
@@ -59,8 +66,7 @@ export const withDroppable = (Component: typeof TreeNode): typeof TreeNode => {
     }
 
     const checkForValidData: DroppableProps['isValidData'] = (info) => {
-      const sourceAsset: Asset = info.data
-      return info.type === 'asset' && isSourceAllowed(sourceAsset) && isAssetTargetAllowed(targetAsset)
+      return info.type === 'asset' && canDrop(getDragSources<Asset>(info)) && isAssetTargetAllowed(targetAsset)
     }
 
     return (

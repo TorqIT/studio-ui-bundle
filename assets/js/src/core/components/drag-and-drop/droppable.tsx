@@ -42,6 +42,11 @@ export interface DragAndDropInfo {
   title: string
   data: any
   sortable?: any
+  /**
+   * Set when several elements are dragged together (tree multi-select). `data` then holds the
+   * element the drag started on; drop targets that support it should act on `items` instead.
+   */
+  items?: any[]
 }
 
 export const Droppable = (props: DroppableProps): React.JSX.Element | null => {

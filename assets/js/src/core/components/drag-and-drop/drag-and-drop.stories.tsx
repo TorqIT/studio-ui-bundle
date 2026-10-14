@@ -87,12 +87,26 @@ const DragAndDropDemo = (): React.JSX.Element => {
         <Draggable info={ { type: 'dnd-demo-3', title: 'Button 3', icon: { value: 'widget-default' }, data: { value: 'Button 3' } } }>
           <Button>Button 3</Button>
         </Draggable>
+
+        {/* Multi-item drag: the info is resolved at drag start and carries every item in `items` */}
+        <Draggable
+          getInfo={ () => ({
+            type: 'dnd-demo-3',
+            title: '3 items',
+            icon: { value: 'widget-default' },
+            data: { value: 'Button 3' },
+            items: [{ value: 'Button 1' }, { value: 'Button 2' }, { value: 'Button 3' }]
+          }) }
+          info={ { type: 'dnd-demo-3', title: 'Buttons 1-3', icon: { value: 'widget-default' }, data: { value: 'Button 3' } } }
+        >
+          <Button>Buttons 1-3 (multi-item)</Button>
+        </Draggable>
       </div>
 
       <Droppable
         isValidContext={ (info: DragAndDropInfo) => info.type === 'dnd-demo-3' }
         isValidData={ (info: DragAndDropInfo) => info.data?.value === 'Button 3' }
-        onDrop={ (info: DragAndDropInfo) => { setValueDemo3(info.data.value) } }
+        onDrop={ (info: DragAndDropInfo) => { setValueDemo3(info.items !== undefined ? `${info.items.length} items` : info.data.value) } }
       >
         <DNDDemoDroppableContent
           title="Validates data and only accepts button 3"

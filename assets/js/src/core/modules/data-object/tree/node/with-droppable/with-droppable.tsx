@@ -11,13 +11,13 @@
 import { type TreeNode, type TreeNodeProps } from '@Pimcore/components/element-tree/node/tree-node'
 import React, { forwardRef, type ReactElement, type Ref } from 'react'
 import { type DragAndDropInfo, type DroppableProps } from '@Pimcore/components/drag-and-drop/droppable'
-import { useCopyPaste } from '@Pimcore/modules/element/actions/copy-paste/use-copy-paste'
+import { useBatchMove } from '@Pimcore/modules/element/actions/copy-paste/use-batch-move'
 import trackError, { GeneralError } from '@Pimcore/modules/app/error-handler'
 import { type DataObject } from '@Pimcore/modules/data-object/data-object-api-slice-enhanced'
 import { isUndefined } from 'lodash'
 import { useDndAllowed } from '@Pimcore/modules/element/tree/node/with-droppable/use-dnd-allowed'
+import { canDropSourcesOnTarget, getDragSources } from '@Pimcore/modules/element/tree/node/with-droppable/drop-validation'
 import { HotspotDroppable, type HotspotDroppableProps } from '@Pimcore/components/drag-and-drop/hotspot-droppable'
-import { useSorting } from '@Pimcore/modules/element/actions/sorting/use-sorting'
 import { useElementTreeNode } from '@Pimcore/components/element-tree/hooks/use-element-tree-node'
 import { useTreeClassRestriction } from '../../hooks/use-tree-class-restriction'
 
@@ -28,8 +28,7 @@ interface OnSortingDropProps {
 
 export const withDroppable = (Component: typeof TreeNode): typeof TreeNode => {
   const DroppableNodeContent = (props: TreeNodeProps, ref: Ref<HTMLDivElement>): ReactElement => {
-    const { move } = useCopyPaste('data-object')
-    const { move: moveByIndex } = useSorting('data-object')
+    const { moveMany } = useBatchMove('data-object')
     const { isSourceAllowed, isTargetAllowed } = useDndAllowed()
     const { isClassAllowed } = useTreeClassRestriction()
     const parentNode = useElementTreeNode(props.parentId ?? '-1')
@@ -54,45 +53,63 @@ export const withDroppable = (Component: typeof TreeNode): typeof TreeNode => {
       )
     }
 
-    const onDrop: DroppableProps['onDrop'] = (info) => {
-      const sourceObject: DataObject = info.data
+    const isSourceObjectAllowed = (sourceObject: DataObject): boolean => {
+      return sourceObject.type !== 'variant' && isSourceAllowed(sourceObject) && isClassAllowed(sourceObject)
+    }
 
-      if (!isSourceAllowed(sourceObject) || !isTargetAllowed(targetObject)) {
+    // Every dragged element has to be allowed; a drop into a folder also must not target one of
+    // the dragged elements or their subtrees.
+    const canDrop = (sourceObjects: DataObject[], target: DataObject): boolean => {
+      return sourceObjects.every(isSourceObjectAllowed) && canDropSourcesOnTarget(sourceObjects, target)
+    }
+
+    const toMoveElements = (sourceObjects: DataObject[]): Array<{ id: number, parentId: number }> => {
+      return sourceObjects.map((sourceObject) => ({ id: sourceObject.id, parentId: sourceObject.parentId }))
+    }
+
+    const onDrop: DroppableProps['onDrop'] = (info) => {
+      const sourceObjects = getDragSources<DataObject>(info)
+
+      if (!canDrop(sourceObjects, targetObject) || !isTargetAllowed(targetObject)) {
         return
       }
 
-      move({
-        currentElement: { id: sourceObject.id, parentId: sourceObject.parentId },
+      moveMany({
+        currentElements: toMoveElements(sourceObjects),
         targetElement: { id: targetObject.id, parentId: targetObject.parentId }
       }).catch(() => {
-        trackError(new GeneralError('Item could not be moved'))
+        trackError(new GeneralError('Items could not be moved'))
       })
     }
 
+    // Sorting drops place the dragged elements next to the target, inside the target's parent.
     const onSortingDrop = (props: OnSortingDropProps): void => {
       const { info, position = 'top' } = props
-      const sourceObject: DataObject = info.data
+      const sourceObjects = getDragSources<DataObject>(info)
+      const newParent = { id: targetObject.parentId, fullPath: undefined }
 
-      if (!isSourceAllowed(sourceObject) || !isTargetAllowed(targetObject)) {
+      if (!sourceObjects.every(isSourceObjectAllowed) || !canDropSourcesOnTarget(sourceObjects, newParent) || !isTargetAllowed(targetObject)) {
         return
       }
 
-      moveByIndex({
-        currentElement: { id: sourceObject.id, parentId: sourceObject.parentId },
-        targetElement: { id: targetObject.id, parentId: targetObject.parentId },
-        newIndex: position === 'top' ? targetObject.index : targetObject.index + 1
+      moveMany({
+        currentElements: toMoveElements(sourceObjects),
+        targetElement: { id: targetObject.parentId, parentId: targetObject.parentId },
+        indexStart: position === 'top' ? targetObject.index : targetObject.index + 1
       }).catch(() => {
-        trackError(new GeneralError('Item could not be moved'))
+        trackError(new GeneralError('Items could not be moved'))
       })
     }
 
     const checkForValidContext: DroppableProps['isValidContext'] = (context) => {
-      return context.type === 'data-object' && context.data.type !== 'variant'
+      return context.type === 'data-object' && getDragSources<DataObject>(context).every((sourceObject) => sourceObject.type !== 'variant')
     }
 
     const checkForValidData: DroppableProps['isValidData'] = (info) => {
-      const sourceObject: DataObject = info.data
-      return info.type === 'data-object' && targetObject.type !== 'variant' && isSourceAllowed(sourceObject) && isTargetAllowed(targetObject) && isClassAllowed(sourceObject)
+      return info.type === 'data-object' &&
+        targetObject.type !== 'variant' &&
+        isTargetAllowed(targetObject) &&
+        canDrop(getDragSources<DataObject>(info), targetObject)
     }
 
     let hotspots: HotspotDroppableProps['hotspots'] = [

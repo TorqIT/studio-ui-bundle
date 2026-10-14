@@ -1111,6 +1111,7 @@ batch-edit.append-mode.replace: Batch replace
 batch-edit.append-mode.add: Batch add
 batch-edit.append-mode.remove: Batch remove
 batch-delete.job-title: Delete
+batch-move.job-title: Move
 export-csv-form.modal-title: Export CSV
 export-csv-form.export-notice: Please note that the export does not support some fields(e.g. preview, size). Press OK to continue with the export.
 export-csv-form.form-field.delimiter: Delimiter
@@ -1156,6 +1157,8 @@ element.tree.context-menu.add-assets.upload-zip: Upload Zip
 element.tree.context-menu.advanced: Advanced
 element.tree.context-menu.search-and-move: Search & Move
 element.tree.context-menu.expand-children: Expand Children
+element.tree.multi-select.drag-title_one: '{{count}} item'
+element.tree.multi-select.drag-title_other: '{{count}} items'
 asset.tree.context-menu.clear-thumbnails: Clear Thumbnails
 element.tree.copy: Copy
 element.tree.copy-success-description: '{{elementType}} "{{name}}" has been copied and is ready to paste'

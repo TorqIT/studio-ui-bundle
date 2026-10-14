@@ -11,13 +11,13 @@
 import { type TreeNode, type TreeNodeProps } from '@Pimcore/components/element-tree/node/tree-node'
 import React, { forwardRef, type ReactElement, type Ref } from 'react'
 import { type DragAndDropInfo, type DroppableProps } from '@Pimcore/components/drag-and-drop/droppable'
-import { useCopyPaste } from '@Pimcore/modules/element/actions/copy-paste/use-copy-paste'
+import { useBatchMove } from '@Pimcore/modules/element/actions/copy-paste/use-batch-move'
 import trackError, { GeneralError } from '@Pimcore/modules/app/error-handler'
 import { type Document } from '@Pimcore/modules/document/document-api-slice-enhanced'
 import { isUndefined } from 'lodash'
 import { useDndAllowed } from '@Pimcore/modules/element/tree/node/with-droppable/use-dnd-allowed'
+import { canDropSourcesOnTarget, getDragSources } from '@Pimcore/modules/element/tree/node/with-droppable/drop-validation'
 import { HotspotDroppable, type HotspotDroppableProps } from '@Pimcore/components/drag-and-drop/hotspot-droppable'
-import { useSorting } from '@Pimcore/modules/element/actions/sorting/use-sorting'
 
 interface OnSortingDropProps {
   info: DragAndDropInfo
@@ -26,8 +26,7 @@ interface OnSortingDropProps {
 
 export const withDroppable = (Component: typeof TreeNode): typeof TreeNode => {
   const DroppableNodeContent = (props: TreeNodeProps, ref: Ref<HTMLDivElement>): ReactElement => {
-    const { move } = useCopyPaste('document')
-    const { move: moveByIndex } = useSorting('document')
+    const { moveMany } = useBatchMove('document')
     const { isSourceAllowed, isTargetAllowed } = useDndAllowed()
 
     if (props.metaData?.document === undefined) {
@@ -44,18 +43,28 @@ export const withDroppable = (Component: typeof TreeNode): typeof TreeNode => {
       )
     }
 
-    const onDrop: DroppableProps['onDrop'] = (info) => {
-      const sourceDocument: Document = info.data
+    // Every dragged document has to be allowed; a drop into a document also must not target one
+    // of the dragged documents or their subtrees.
+    const canDrop = (sourceDocuments: Document[], target: { id: number, fullPath?: string }): boolean => {
+      return sourceDocuments.every((sourceDocument) => isSourceAllowed(sourceDocument)) && canDropSourcesOnTarget(sourceDocuments, target)
+    }
 
-      if (!isSourceAllowed(sourceDocument) || !isTargetAllowed(targetDocument)) {
+    const toMoveElements = (sourceDocuments: Document[]): Array<{ id: number, parentId: number }> => {
+      return sourceDocuments.map((sourceDocument) => ({ id: sourceDocument.id, parentId: sourceDocument.parentId }))
+    }
+
+    const onDrop: DroppableProps['onDrop'] = (info) => {
+      const sourceDocuments = getDragSources<Document>(info)
+
+      if (!canDrop(sourceDocuments, targetDocument) || !isTargetAllowed(targetDocument)) {
         return
       }
 
-      move({
-        currentElement: { id: sourceDocument.id, parentId: sourceDocument.parentId },
+      moveMany({
+        currentElements: toMoveElements(sourceDocuments),
         targetElement: { id: targetDocument.id, parentId: targetDocument.parentId }
       }).catch(() => {
-        trackError(new GeneralError('Item could not be moved'))
+        trackError(new GeneralError('Items could not be moved'))
       })
     }
 
@@ -64,24 +73,24 @@ export const withDroppable = (Component: typeof TreeNode): typeof TreeNode => {
     }
 
     const checkForValidData: DroppableProps['isValidData'] = (info) => {
-      const sourceDocument: Document = info.data
-      return info.type === 'document' && isSourceAllowed(sourceDocument) && isTargetAllowed(targetDocument)
+      return info.type === 'document' && canDrop(getDragSources<Document>(info), targetDocument) && isTargetAllowed(targetDocument)
     }
 
+    // Sorting drops place the dragged documents next to the target, inside the target's parent.
     const onSortingDrop = (props: OnSortingDropProps): void => {
       const { info, position = 'top' } = props
-      const sourceDocument: Document = info.data
+      const sourceDocuments = getDragSources<Document>(info)
 
-      if (!isSourceAllowed(sourceDocument) || !isTargetAllowed(targetDocument)) {
+      if (!canDrop(sourceDocuments, { id: targetDocument.parentId }) || !isTargetAllowed(targetDocument)) {
         return
       }
 
-      moveByIndex({
-        currentElement: { id: sourceDocument.id, parentId: sourceDocument.parentId },
-        targetElement: { id: targetDocument.id, parentId: targetDocument.parentId },
-        newIndex: position === 'top' ? targetDocument.index : targetDocument.index + 1
+      moveMany({
+        currentElements: toMoveElements(sourceDocuments),
+        targetElement: { id: targetDocument.parentId, parentId: targetDocument.parentId },
+        indexStart: position === 'top' ? targetDocument.index : targetDocument.index + 1
       }).catch(() => {
-        trackError(new GeneralError('Item could not be moved'))
+        trackError(new GeneralError('Items could not be moved'))
       })
     }
 
