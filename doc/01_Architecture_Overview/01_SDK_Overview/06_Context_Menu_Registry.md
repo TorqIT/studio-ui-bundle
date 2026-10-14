@@ -72,6 +72,35 @@ contextMenuRegistry.registerToSlot(contextMenuConfig.assetListGrid.name, {
 
 The [Context Menu Configuration Source](https://github.com/pimcore/studio-ui-bundle/blob/2026.x/assets/js/src/core/modules/app/context-menu-registry/context-menu-config.ts) contains all available slot names and their priority configurations for consistent referencing.
 
+## Tree Multi-Selection
+
+Several tree nodes can be selected at once (Ctrl/Cmd+click toggles a node, Shift+click selects a range). When the context menu is opened on a node that is part of such a selection, the tree slots behave differently:
+
+- The context passed to `useMenuItem` carries every selected node in `selectedNodes` (the right-clicked node is still available as `target`).
+- Only providers that declare `supportsMultiSelection: true` contribute to the menu. Providers without the flag are skipped, because their items act on a single node.
+
+```typescript
+contextMenuRegistry.registerToSlot(contextMenuConfig.dataObjectTree.name, {
+  name: 'customBatchAction',
+  priority: contextMenuConfig.dataObjectTree.priority.delete + 1,
+  supportsMultiSelection: true,
+  useMenuItem: (context: DataObjectTreeContextMenuProps) => {
+    const nodes = context.selectedNodes ?? [context.target]
+
+    return {
+      label: `Custom action (${nodes.length})`,
+      key: 'customBatchAction',
+      icon: <Icon value='custom-icon' />,
+      onClick: () => {
+        // Act on every node in `nodes`
+      }
+    }
+  }
+})
+```
+
+A provider with `supportsMultiSelection` is also used for single nodes; `selectedNodes` is `undefined` in that case.
+
 ## Modifying Existing Context Menu Items
 
 ### Override a Provider Completely
