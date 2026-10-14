@@ -20,6 +20,7 @@ import { useZipDownload } from '@Pimcore/modules/asset/actions/zip-download/use-
 import { useAddFolder } from '@Pimcore/modules/element/actions/add-folder/use-add-folder'
 import { useCopyPaste } from '@Pimcore/modules/element/actions/copy-paste/use-copy-paste'
 import { useDelete } from '@Pimcore/modules/element/actions/delete/use-delete'
+import { useTreeBatchDelete } from '@Pimcore/modules/element/actions/delete/use-tree-batch-delete'
 import { useLock } from '@Pimcore/modules/element/actions/lock/use-lock'
 import { useRefreshTree } from '@Pimcore/modules/element/actions/refresh-tree/use-refresh-tree'
 import { useRename } from '@Pimcore/modules/element/actions/rename/use-rename'
@@ -113,6 +114,16 @@ moduleSystem.registerModule({
       useMenuItem: (context: AssetTreeContextMenuProps) => {
         const { deleteTreeContextMenuItem } = useDelete('asset', getElementActionCacheKey('asset', 'delete', Number.parseInt(context.target.id)))
         return deleteTreeContextMenuItem(context.target)
+      }
+    })
+
+    contextMenuRegistry.registerToSlot(config.name, {
+      name: 'batch-delete',
+      priority: config.priority.delete,
+      supportsMultiSelection: true,
+      useMenuItem: (context: AssetTreeContextMenuProps) => {
+        const { batchDeleteTreeContextMenuItem } = useTreeBatchDelete('asset')
+        return batchDeleteTreeContextMenuItem(context.selectedNodes ?? [], context.onComplete)
       }
     })
 

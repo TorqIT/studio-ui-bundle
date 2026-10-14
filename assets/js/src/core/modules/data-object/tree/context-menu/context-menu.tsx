@@ -10,22 +10,19 @@
 
 import React from 'react'
 import { defaultProps, type TreeNodeProps } from '@Pimcore/components/element-tree/node/tree-node'
-import { Menu } from '@Pimcore/components/menu/menu'
-import { createContextMenuContainerTestId } from '@Pimcore/utils/test-id-generator'
-import { useContextMenuSlot } from '@Pimcore/modules/app/context-menu-registry/use-context-menu-slot'
+import { contextMenuConfig } from '@Pimcore/modules/app/context-menu-registry/context-menu-config'
+import { ElementTreeContextMenu } from '@Pimcore/modules/element/tree/context-menu/element-tree-context-menu'
 
 export interface DataObjectTreeContextMenuProps {
   node: TreeNodeProps
 }
 
 export const DataObjectTreeContextMenu = (props: DataObjectTreeContextMenuProps): React.JSX.Element => {
-  const node = props.node ?? defaultProps
-  const items = useContextMenuSlot('data-object.tree', { target: node, onComplete: () => {} })
-
   return (
-    <Menu
-      dataTestId={ createContextMenuContainerTestId('data-object', node.id) }
-      items={ items }
+    <ElementTreeContextMenu
+      elementType="data-object"
+      node={ props.node ?? defaultProps }
+      slotName={ contextMenuConfig.dataObjectTree.name }
     />
   )
 }

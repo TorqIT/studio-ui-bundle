@@ -18,7 +18,9 @@ export function useContextMenuSlot (
   context: any
 ): ItemType[] {
   const contextMenuRegistry = container.get<ContextMenuRegistryInterface>(serviceIds['App/ContextMenuRegistry/ContextMenuRegistry'])
+  const isMultiSelection = Array.isArray(context?.selectedNodes) && context.selectedNodes.length > 1
   const providers = contextMenuRegistry.getSlotProviders(slotName)
+    .filter((provider) => !isMultiSelection || provider.supportsMultiSelection === true)
 
   return providers.map((provider) => {
     // Generate the menu item directly

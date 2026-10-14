@@ -8,6 +8,7 @@
  *  @license    Pimcore Open Core License (POCL)
  */
 
+import { type TreeNode } from '@Pimcore/components/element-tree/element-tree-slice'
 import { type TreeNodeProps } from '@Pimcore/components/element-tree/node/tree-node'
 import { type Asset } from '@Pimcore/modules/asset/asset-api-slice-enhanced'
 import { type AssetGetTreeApiResponse } from '@Pimcore/modules/asset/asset-api-slice.gen'
@@ -16,7 +17,10 @@ import { type Document } from '@Pimcore/modules/document/document-api-slice.gen'
 
 // Context type definitions for context menu slots
 export interface TreeContextMenuProps {
+  /** The right-clicked node. */
   target: TreeNodeProps
+  /** All selected nodes (including `target`) when the menu was opened on a multi-selection. */
+  selectedNodes?: TreeNode[]
   onComplete?: () => void
 }
 
@@ -35,15 +39,9 @@ export interface AssetEditorContextMenuProps {
   onComplete?: () => void
 }
 
-export interface DataObjectTreeContextMenuProps {
-  target: TreeNodeProps
-  onComplete?: () => void
-}
+export interface DataObjectTreeContextMenuProps extends TreeContextMenuProps {}
 
-export interface AssetTreeContextMenuProps {
-  target: TreeNodeProps
-  onComplete?: () => void
-}
+export interface AssetTreeContextMenuProps extends TreeContextMenuProps {}
 
 export interface AssetListGridContextMenuProps {
   row: {

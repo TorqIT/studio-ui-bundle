@@ -17,6 +17,7 @@ import { contextMenuConfig } from '@Pimcore/modules/app/context-menu-registry/co
 import { useAddFolder } from '@Pimcore/modules/element/actions/add-folder/use-add-folder'
 import { useRename } from '@Pimcore/modules/element/actions/rename/use-rename'
 import { useDelete } from '@Pimcore/modules/element/actions/delete/use-delete'
+import { useTreeBatchDelete } from '@Pimcore/modules/element/actions/delete/use-tree-batch-delete'
 import { useRefreshTree } from '@Pimcore/modules/element/actions/refresh-tree/use-refresh-tree'
 import { useCopyPaste } from '@Pimcore/modules/element/actions/copy-paste/use-copy-paste'
 import { useLock } from '@Pimcore/modules/element/actions/lock/use-lock'
@@ -165,6 +166,16 @@ moduleSystem.registerModule({
       useMenuItem: (context: DataObjectTreeContextMenuProps) => {
         const { deleteTreeContextMenuItem } = useDelete('data-object', getElementActionCacheKey('data-object', 'delete', Number.parseInt(context.target.id)))
         return deleteTreeContextMenuItem(context.target)
+      }
+    })
+
+    contextMenuRegistry.registerToSlot(config.name, {
+      name: 'batch-delete',
+      priority: config.priority.delete,
+      supportsMultiSelection: true,
+      useMenuItem: (context: DataObjectTreeContextMenuProps) => {
+        const { batchDeleteTreeContextMenuItem } = useTreeBatchDelete('data-object')
+        return batchDeleteTreeContextMenuItem(context.selectedNodes ?? [], context.onComplete)
       }
     })
 

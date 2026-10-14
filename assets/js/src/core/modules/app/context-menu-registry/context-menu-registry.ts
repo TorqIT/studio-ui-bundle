@@ -15,6 +15,11 @@ import trackError, { GeneralError } from '@Pimcore/modules/app/error-handler'
 export interface ContextMenuItemProvider {
   name: string
   priority?: number
+  /**
+   * Whether the item can act on several selected tree nodes at once (`context.selectedNodes`).
+   * While more than one node is selected, only providers with this flag contribute to the menu.
+   */
+  supportsMultiSelection?: boolean
   useMenuItem: (context: any) => ItemType | null
 }
 
