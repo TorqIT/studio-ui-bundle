@@ -218,10 +218,12 @@ const updateSelectedNodeIds = (state: TreesState, treeId: string, selectedNodeId
   state[treeId].selectedNodeIds = nextSelectedNodeIds
 }
 
-// Drop ids of nodes that no longer exist in the tree (e.g. after a parent was refreshed).
+// Drop ids whose node state was removed from the tree. Nodes that merely lost their
+// `treeNodeProps` are kept: a parent reload blanks the props of children that moved away, and the
+// new parent's reload restores them — their selection has to survive that in-between state.
 const pruneSelectedNodeIds = (state: TreesState, treeId: string): void => {
   const selectedNodeIds = getSelectedNodeIds(state, treeId)
-  const existingSelectedNodeIds = selectedNodeIds.filter(nodeId => !isUndefined(state[treeId].nodes[nodeId]?.treeNodeProps))
+  const existingSelectedNodeIds = selectedNodeIds.filter(nodeId => !isUndefined(state[treeId].nodes[nodeId]))
 
   if (existingSelectedNodeIds.length !== selectedNodeIds.length) {
     state[treeId].selectedNodeIds = existingSelectedNodeIds
@@ -499,6 +501,7 @@ const slice = createSlice({
           }))
 
           state[treeId].nodes = removeDescendants(state[treeId].nodes, payload.nodeId)
+          pruneSelectedNodeIds(state, treeId)
         }
       })
     },

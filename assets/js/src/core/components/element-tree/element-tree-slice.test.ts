@@ -25,6 +25,7 @@ import { injectSliceWithState, type RootState } from '@sdk/app'
 import {
   clearSelectedNodeIds,
   type InternalNodeState,
+  refreshNodeChildren,
   renameNode,
   selectSelectedNodeIds,
   selectSelectedNodes,
@@ -164,15 +165,52 @@ describe('element-tree-slice: selection', () => {
     expect(selectedFlagsOf(state)).toMatchObject({ 10: false, 11: false, 12: false })
   })
 
-  it('drops selected ids whose nodes disappear when a parent is reloaded', () => {
+  it('keeps moved nodes selected regardless of which parent reloads first', () => {
+    const moved = [createNode('10', '2'), createNode('11', '2')]
+
+    // origin parent (1) reloads first: the moved nodes temporarily lose their props
+    const originFirst = dispatchAll([
+      loadChildren(threeChildren),
+      setSelectedNodeIds({ treeId, selectedNodeIds: ['10', '11'] }),
+      loadChildren([createNode('12', '1')], '1'),
+      loadChildren(moved, '2')
+    ])
+    expect(selectedIdsOf(originFirst)).toEqual(['10', '11'])
+    expect(selectSelectedNodes(rootStateOf(originFirst), treeId).map((node) => node.parentId)).toEqual(['2', '2'])
+
+    // destination parent (2) reloads first
+    const destinationFirst = dispatchAll([
+      loadChildren(threeChildren),
+      setSelectedNodeIds({ treeId, selectedNodeIds: ['10', '11'] }),
+      loadChildren(moved, '2'),
+      loadChildren([createNode('12', '1')], '1')
+    ])
+    expect(selectedIdsOf(destinationFirst)).toEqual(['10', '11'])
+    expect(selectSelectedNodes(rootStateOf(destinationFirst), treeId).map((node) => node.parentId)).toEqual(['2', '2'])
+  })
+
+  it('does not resolve a selected node that lost its data', () => {
     const state = dispatchAll([
       loadChildren(threeChildren),
-      setSelectedNodeIds({ treeId, selectedNodeIds: ['10', '11', '12'] }),
-      // node 11 was deleted or moved away; the parent comes back without it
+      setSelectedNodeIds({ treeId, selectedNodeIds: ['10', '11'] }),
+      // node 11 is gone from its parent and has not shown up anywhere else (yet)
       loadChildren([createNode('10', '1'), createNode('12', '1')])
     ])
 
-    expect(selectedIdsOf(state)).toEqual(['10', '12'])
+    expect(selectedIdsOf(state)).toEqual(['10', '11'])
+    expect(selectSelectedNodes(rootStateOf(state), treeId).map((node) => node.id)).toEqual(['10'])
+  })
+
+  it('drops selected ids whose node states were removed', () => {
+    const state = dispatchAll([
+      loadChildren([createNode('1', '0')], '0'),
+      loadChildren(threeChildren),
+      setSelectedNodeIds({ treeId, selectedNodeIds: ['10', '12'] }),
+      // a forced reload of node 1 throws its children away before refetching them
+      refreshNodeChildren({ nodeId: '1', elementType: 'data-object' })
+    ])
+
+    expect(selectedIdsOf(state)).toEqual([])
   })
 
   it('resolves the selected nodes in selection order and skips ids without node data', () => {
