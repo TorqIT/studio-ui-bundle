@@ -111,15 +111,27 @@ export const useTreeBatchDelete = (elementType: ElementType): UseTreeBatchDelete
     await executionEngine.runJob(job)
   }
 
+  // One delete job per node, strictly one after the other: a deletion with children runs as a
+  // background job, so each job is awaited until it has finished rather than until it was started.
+  // The jobs get no parent to refresh themselves — overlapping refetches of the same parent would
+  // race each other and the last response to arrive, not the latest one, would win. The parents
+  // are refreshed once, after the last deletion.
   const runSingleDeleteJobs = async (nodes: TreeNode[], onFinish?: () => void): Promise<void> => {
     for (const node of nodes) {
-      await executionEngine.runJob(new DeleteJob({
-        elementId: parseInt(node.id),
-        elementType,
-        treeId,
-        nodeId: node.id,
-        parentFolderId: isNil(node.parentId) ? undefined : parseInt(node.parentId)
-      }))
+      await new Promise<void>((resolve) => {
+        const job = new DeleteJob({
+          elementId: parseInt(node.id),
+          elementType,
+          treeId,
+          nodeId: node.id,
+          onFinished: resolve
+        })
+
+        executionEngine.runJob(job).catch((error: unknown) => {
+          console.error('Delete job could not be started:', error)
+          resolve()
+        })
+      })
     }
 
     finishDeletion(nodes, onFinish)

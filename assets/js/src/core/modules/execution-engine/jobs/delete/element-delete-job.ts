@@ -27,6 +27,8 @@ export interface DeleteJobOptions {
   treeId?: string
   nodeId?: string
   parentFolderId?: number
+  /** Called once the deletion has finished or failed — also for deletions that run as a background job. */
+  onFinished?: () => void
 }
 
 export class DeleteJob implements JobInterface {
@@ -37,6 +39,7 @@ export class DeleteJob implements JobInterface {
   private readonly treeId?: string
   private readonly nodeId?: string
   private readonly parentFolderId?: number
+  private readonly onFinished?: () => void
 
   constructor (options: DeleteJobOptions) {
     this.elementId = options.elementId
@@ -44,6 +47,7 @@ export class DeleteJob implements JobInterface {
     this.treeId = options.treeId
     this.nodeId = options.nodeId
     this.parentFolderId = options.parentFolderId
+    this.onFinished = options.onFinished
   }
 
   async run (options: JobRunOptions): Promise<void> {
@@ -126,6 +130,8 @@ export class DeleteJob implements JobInterface {
         nodeId: this.parentFolderId.toString()
       }))
     }
+
+    this.onFinished?.()
   }
 
   private async handleJobFailure (error: any): Promise<void> {
@@ -140,6 +146,7 @@ export class DeleteJob implements JobInterface {
     }))
 
     console.error('Delete job failed:', error)
+    this.onFinished?.()
   }
 
   static rehydrate (jobRuns: JobRunList): MessageBusJobHandler {
